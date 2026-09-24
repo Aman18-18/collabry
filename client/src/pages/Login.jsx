@@ -22,8 +22,11 @@ function Login(){
             return;
         }
 
-        console.log("Email:", email);
-        console.log("Password:", password);
+        const user = {
+        email: email,
+        password: password
+    };
+      login(user);
      }
     return (
         <>
