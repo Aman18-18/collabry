@@ -8,7 +8,7 @@ function Navbar() {
         <nav>
             <Link to="/">Home</Link><br />
             <Link to="/browse">Browse</Link><br />
-            
+
             {!user && (
                 <>
                     <Link to="/login">Login</Link><br />
@@ -19,6 +19,8 @@ function Navbar() {
             {user && (
                 <>
                     <Link to="/postproject">Post Project</Link><br />
+                    <Link to="/my-projects">My Projects</Link><br />
+                    <Link to="/applicants">Applicants</Link><br />
                     <Link to="/profile">Profile</Link><br />
                     <button onClick={logout}>Logout</button>
                 </>
