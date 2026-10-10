@@ -1,21 +1,47 @@
-import { useState } from "react";
+import { useReducer, useMemo } from "react";
 import ProjectCard from "../components/ProjectCard";
 import useProjects from "../hooks/useProjects";
 
+function reducer(state, action) {
+    switch (action.type) {
+        case "SET_SEARCH":
+            return {
+                ...state,
+                search: action.payload,
+                currentPage: 1
+            };
+
+        case "SET_PAGE":
+            return {
+                ...state,
+                currentPage: action.payload
+            };
+
+        default:
+            return state;
+    }
+}
+
 function Browse() {
-    const [search, setSearch] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [state, dispatch] = useReducer(reducer, {
+    search: "",
+    currentPage: 1
+});
+
+const { search, currentPage } = state;
 
     const { projects, loading, error } = useProjects();
 
     const projectsPerPage = 3;
 
-    const filteredProjects = projects.filter((project) => {
+   const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
         return (
             project.title.toLowerCase().includes(search.toLowerCase()) ||
             project.description.toLowerCase().includes(search.toLowerCase())
         );
     });
+}, [projects, search]);
 
     const totalPages = Math.ceil(
         filteredProjects.length / projectsPerPage
@@ -28,10 +54,12 @@ function Browse() {
         startIndex + projectsPerPage
     );
 
-    function handleSearch(event) {
-        setSearch(event.target.value);
-        setCurrentPage(1);
-    }
+   function handleSearch(event) {
+    dispatch({
+        type: "SET_SEARCH",
+        payload: event.target.value
+    });
+}
 
     if (loading) return <h2>Loading projects...</h2>;
 
@@ -68,7 +96,12 @@ function Browse() {
             <div>
                 <button
                     disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(currentPage - 1)}
+                    onClick={() =>
+        dispatch({
+        type: "SET_PAGE",
+        payload: currentPage - 1
+    })
+}
                 >
                     Previous
                 </button>
@@ -82,7 +115,12 @@ function Browse() {
                         currentPage === totalPages ||
                         totalPages === 0
                     }
-                    onClick={() => setCurrentPage(currentPage + 1)}
+                    onClick={() =>
+    dispatch({
+        type: "SET_PAGE",
+        payload: currentPage + 1
+    })
+}
                 >
                     Next
                 </button>
