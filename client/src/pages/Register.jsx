@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import useAuth from "../hooks/useAuth";
 
@@ -9,10 +10,13 @@ function Register() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
+    const [message, setMessage] = useState("");
 
     const handleRegister = async (event) => {
         event.preventDefault();
+
         setError("");
+        setMessage("");
 
         if (name.trim().length === 0) {
             setError("Name is required");
@@ -41,9 +45,16 @@ function Register() {
 
         try {
             await register(name, email, password);
+            setMessage("Registration successful! You can now log in.");
+
+            setName("");
+            setEmail("");
+            setPassword("");
+            setConfirmPassword("");
         } catch (error) {
             setError(
-                error.response?.data?.message || "Registration failed"
+                error.response?.data?.message ||
+                "Registration failed. Please try again."
             );
         }
     };
@@ -107,7 +118,17 @@ function Register() {
 
                 <br />
 
-                {error && <p style={{ color: "red" }}>{error}</p>}
+                {message && (
+                    <p style={{ color: "green" }} role="status">
+                        {message}
+                    </p>
+                )}
+
+                {error && (
+                    <p style={{ color: "red" }} role="alert">
+                        {error}
+                    </p>
+                )}
 
                 <button type="submit">
                     Register
