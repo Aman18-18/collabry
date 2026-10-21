@@ -204,3 +204,23 @@ a:hover { color: var(--accent-text); }
 .btn-danger { background: var(--accent-text); color: #fff; }
 .btn-danger:hover { color: #fff; }
 .confirm-box { display: flex; flex-direction: column; gap: 12px; padding-top: 4px; font-size: 15px; font-weight: 500; }
+
+/* visually hidden, still read by screen readers */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* rotating headline word: all words share one grid cell so the width never jumps */
+.rotator { display: inline-grid; vertical-align: bottom; }
+.rotator-word { grid-area: 1 / 1; color: var(--accent); opacity: 0; transform: translateY(28%); transition: opacity .35s ease, transform .35s ease; }
+.rotator-word.is-active { opacity: 1; transform: none; }
+
+/* ticker band on the home page */
+.ticker-wrap { overflow: hidden; padding: 28px 0; }
+.ticker { background: var(--ink); color: var(--paper); border-top: var(--border); border-bottom: var(--border); transform: rotate(-0.8deg); width: 104%; margin-left: -2%; overflow: hidden; white-space: nowrap; padding: 14px 0; }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+.ticker-track { display: inline-flex; width: max-content; animation: ticker-move 45s linear infinite; }
+.ticker-group { display: inline-flex; }
+.ticker-word { font: 600 26px var(--serif); text-transform: uppercase; letter-spacing: 2px; padding: 0 6px 0 20px; }
+.ticker-word.accent { color: var(--accent); }
+.ticker-dot { padding-left: 26px; color: var(--paper); opacity: .5; }
+@keyframes ticker-move { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }

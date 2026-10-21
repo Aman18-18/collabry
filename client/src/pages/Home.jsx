@@ -1,7 +1,55 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ProjectCard from "../components/ProjectCard";
 import useProjects from "../hooks/useProjects";
 import { newestFirst } from "../lib/projectOptions";
+
+const WORDS = ["build", "design", "code", "ship", "prototype"];
+
+const TICKER = [
+  "Building", "Designing", "Shipping", "Teaming up",
+  "Prototyping", "Coding", "Pitching", "Learning"
+];
+
+// the last word of the headline changes every couple of seconds
+function RotatingWord() {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || paused) return;
+
+    const timer = setInterval(
+      () => setIndex((current) => (current + 1) % WORDS.length),
+      2600
+    );
+
+    return () => clearInterval(timer);
+  }, [paused]);
+
+  return (
+    <>
+      {/* screen readers get one stable sentence instead of a changing word */}
+      <span className="sr-only">build.</span>
+      <span
+        className="rotator"
+        aria-hidden="true"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        {WORDS.map((word, i) => (
+          <span
+            key={word}
+            className={`rotator-word${i === index ? " is-active" : ""}`}
+          >
+            {word}.
+          </span>
+        ))}
+      </span>
+    </>
+  );
+}
 
 function Home() {
   const { projects, loading } = useProjects();
@@ -20,7 +68,7 @@ function Home() {
           <span className="sheet sheet-3" />
         </div>
         <div className="eyebrow">Find your team on campus</div>
-        <h1>Somebody here needs exactly what you can build.</h1>
+        <h1>Somebody here needs exactly what you can <RotatingWord /></h1>
         <p>
           Pin your project, say who you're missing, and let people who want to
           build with you come to you.
@@ -30,6 +78,23 @@ function Home() {
           <Link to="/postproject" className="btn">Pin a project</Link>
         </div>
       </main>
+
+      <div className="ticker-wrap" aria-hidden="true">
+        <div className="ticker">
+          <div className="ticker-track">
+            {[0, 1].map((copy) => (
+              <div className="ticker-group" key={copy}>
+                {TICKER.map((word, i) => (
+                  <span className={`ticker-word${i % 3 === 1 ? " accent" : ""}`} key={word}>
+                    {word}
+                    <span className="ticker-dot">·</span>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {!loading && latest.length > 0 && (
         <section className="page home-board" aria-labelledby="latest-heading">
