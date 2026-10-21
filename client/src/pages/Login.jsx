@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
 function Login() {
@@ -32,11 +33,19 @@ function Login() {
     };
 
     return (
-        <>
-            <form onSubmit={handleLogin}>
+        <main className="page page-narrow">
+            <div className="page-head">
                 <div>
-                    <label>Email</label>
+                    <div className="eyebrow">Welcome back</div>
+                    <h1>Login</h1>
+                </div>
+            </div>
+
+            <form className="form-card" onSubmit={handleLogin}>
+                <div className="field">
+                    <label htmlFor="email">Email</label>
                     <input
+                        id="email"
                         type="email"
                         placeholder="Enter your email"
                         value={email}
@@ -44,11 +53,10 @@ function Login() {
                     />
                 </div>
 
-                <br />
-
-                <div>
-                    <label>Password</label>
+                <div className="field">
+                    <label htmlFor="password">Password</label>
                     <input
+                        id="password"
                         type="password"
                         placeholder="Enter your password"
                         value={password}
@@ -56,15 +64,17 @@ function Login() {
                     />
                 </div>
 
-                <br />
+                {error && <p className="notice-error" role="alert">{error}</p>}
 
-                {error && <p style={{ color: "red" }}>{error}</p>}
-
-                <button type="submit">
+                <button className="btn btn-primary" type="submit">
                     Login
                 </button>
+
+                <p className="form-foot">
+                    New here? <Link to="/register">Create an account</Link>
+                </p>
             </form>
-        </>
+        </main>
     );
 }
 

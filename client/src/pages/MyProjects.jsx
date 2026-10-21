@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../lib/axios";
 import useAuth from "../hooks/useAuth";
 
@@ -37,33 +38,46 @@ function MyProjects() {
     }, [user]);
 
     if (loading) {
-        return <h2>Loading your projects...</h2>;
+        return <p className="status-msg">Loading your projects...</p>;
     }
 
     if (error) {
-        return <h2>{error}</h2>;
+        return <p className="status-msg">{error}</p>;
     }
 
     return (
-        <>
-            <h1>My Projects</h1>
+        <main className="page">
+            <div className="page-head">
+                <div>
+                    <div className="eyebrow">Your notices</div>
+                    <h1>My projects</h1>
+                </div>
+                <Link to="/postproject" className="btn btn-primary">
+                    Pin a project
+                </Link>
+            </div>
 
             {projects.length === 0 ? (
-                <p>You haven't created any projects yet.</p>
+                <p className="status-msg">You haven't created any projects yet.</p>
             ) : (
-                projects.map(project => (
-                    <div key={project._id}>
-                        <h2>{project.title}</h2>
-                        <p>{project.description}</p>
-                        <p>
-                            Team Size: {project.currentSize}/
-                            {project.teamSize}
-                        </p>
-                        <p>Status: {project.status}</p>
-                    </div>
-                ))
+                <div className="board">
+                    {projects.map(project => (
+                        <article className="notice" key={project._id}>
+                            <div className="eyebrow">{project.status}</div>
+                            <h2>
+                                <Link to={`/project/${project._id}`}>{project.title}</Link>
+                            </h2>
+                            <p className="notice-desc">{project.description}</p>
+                            <div className="notice-meta">
+                                <span className="notice-spots">
+                                    {project.currentSize} of {project.teamSize} joined
+                                </span>
+                            </div>
+                        </article>
+                    ))}
+                </div>
             )}
-        </>
+        </main>
     );
 }
 

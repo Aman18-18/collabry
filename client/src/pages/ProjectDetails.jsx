@@ -40,26 +40,40 @@ function ProjectDetails() {
     }, [id]);
 
     if (loading) {
-        return <h2>Loading project...</h2>;
+        return <p className="status-msg">Loading project...</p>;
     }
 
     if (error) {
-        return <h2>{error}</h2>;
+        return <p className="status-msg">{error}</p>;
     }
 
-    return (
-        <>
-            <h1>{project.title}</h1>
+    const tags = (list) =>
+        (list || []).map((item) => (
+            <span className="tag" key={item}>{item}</span>
+        ));
 
-            <p>Description: {project.description}</p>
-            <p>Technology Stack: {project.techStack?.join(", ")}</p>
-            <p>Skills Needed: {project.skillsNeeded?.join(", ")}</p>
-            <p>
-                Team Size: {project.currentSize}/{project.teamSize}
-            </p>
-            <p>Status: {project.status}</p>
-            <p>Project Owner: {project.owner?.name}</p>
-        </>
+    return (
+        <main className="page page-narrow" style={{ maxWidth: 760 }}>
+            <article className="detail">
+                <div>
+                    <div className="eyebrow">{project.status}</div>
+                    <h1>{project.title}</h1>
+                </div>
+
+                <p>{project.description}</p>
+
+                <dl>
+                    <dt>Tech stack</dt>
+                    <dd><div className="tags">{tags(project.techStack)}</div></dd>
+                    <dt>Skills needed</dt>
+                    <dd><div className="tags">{tags(project.skillsNeeded)}</div></dd>
+                    <dt>Team</dt>
+                    <dd>{project.currentSize} of {project.teamSize} joined</dd>
+                    <dt>Posted by</dt>
+                    <dd>{project.owner?.name}</dd>
+                </dl>
+            </article>
+        </main>
     );
 }
 

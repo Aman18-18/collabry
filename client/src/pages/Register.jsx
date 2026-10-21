@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
 function Register() {
@@ -60,14 +61,19 @@ function Register() {
     };
 
     return (
-        <>
-            <h1>Register</h1>
-
-            <form onSubmit={handleRegister}>
+        <main className="page page-narrow">
+            <div className="page-head">
                 <div>
-                    <label>Name</label>
-                    <br />
+                    <div className="eyebrow">Join Collabry</div>
+                    <h1>Register</h1>
+                </div>
+            </div>
+
+            <form className="form-card" onSubmit={handleRegister}>
+                <div className="field">
+                    <label htmlFor="name">Name</label>
                     <input
+                        id="name"
                         type="text"
                         placeholder="Enter your name"
                         value={name}
@@ -75,12 +81,10 @@ function Register() {
                     />
                 </div>
 
-                <br />
-
-                <div>
-                    <label>Email</label>
-                    <br />
+                <div className="field">
+                    <label htmlFor="email">Email</label>
                     <input
+                        id="email"
                         type="email"
                         placeholder="Enter your email"
                         value={email}
@@ -88,12 +92,10 @@ function Register() {
                     />
                 </div>
 
-                <br />
-
-                <div>
-                    <label>Password</label>
-                    <br />
+                <div className="field">
+                    <label htmlFor="password">Password</label>
                     <input
+                        id="password"
                         type="password"
                         placeholder="Enter your password"
                         value={password}
@@ -101,40 +103,34 @@ function Register() {
                     />
                 </div>
 
-                <br />
-
-                <div>
-                    <label>Confirm Password</label>
-                    <br />
+                <div className="field">
+                    <label htmlFor="confirm">Confirm password</label>
                     <input
+                        id="confirm"
                         type="password"
                         placeholder="Confirm your password"
                         value={confirmPassword}
-                        onChange={(event) =>
-                            setConfirmPassword(event.target.value)
-                        }
+                        onChange={(event) => setConfirmPassword(event.target.value)}
                     />
                 </div>
 
-                <br />
-
                 {message && (
-                    <p style={{ color: "green" }} role="status">
-                        {message}
-                    </p>
+                    <p className="notice-ok" role="status">{message}</p>
                 )}
 
                 {error && (
-                    <p style={{ color: "red" }} role="alert">
-                        {error}
-                    </p>
+                    <p className="notice-error" role="alert">{error}</p>
                 )}
 
-                <button type="submit">
+                <button className="btn btn-primary" type="submit">
                     Register
                 </button>
+
+                <p className="form-foot">
+                    Already have an account? <Link to="/login">Login</Link>
+                </p>
             </form>
-        </>
+        </main>
     );
 }
 

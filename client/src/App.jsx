@@ -20,7 +20,7 @@ function App() {
     <>
       <Navbar />
 
-      <Suspense fallback={<h2>Loading page...</h2>}>
+      <Suspense fallback={<p className="status-msg">Loading page...</p>}>
     <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/browse" element={<Browse />} />

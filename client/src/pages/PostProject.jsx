@@ -48,30 +48,30 @@ function PostProject() {
     }
 
     return (
-        <>
-            <h1>Post Project</h1>
-
-            <form onSubmit={handleSubmit}>
-
+        <main className="page page-narrow">
+            <div className="page-head">
                 <div>
-                    <label>Title</label>
-                    <br />
+                    <div className="eyebrow">New notice</div>
+                    <h1>Pin a project</h1>
+                </div>
+            </div>
+
+            <form className="form-card" onSubmit={handleSubmit}>
+                <div className="field">
+                    <label htmlFor="title">Title</label>
                     <input
+                        id="title"
                         type="text"
                         placeholder="Project title"
                         value={title}
-                        onChange={(event) =>
-                            setTitle(event.target.value)
-                        }
+                        onChange={(event) => setTitle(event.target.value)}
                     />
                 </div>
 
-                <br />
-
-                <div>
-                    <label>Description</label>
-                    <br />
+                <div className="field">
+                    <label htmlFor="description">Description</label>
                     <textarea
+                        id="description"
                         placeholder="Describe your project"
                         value={description}
                         onChange={(event) =>
@@ -80,71 +80,48 @@ function PostProject() {
                     />
                 </div>
 
-                <br />
-
-                <div>
-                    <label>Tech Stack</label>
-                    <br />
+                <div className="field">
+                    <label htmlFor="techStack">Tech stack (comma separated)</label>
                     <input
+                        id="techStack"
                         type="text"
                         placeholder="React, Node.js, MongoDB"
                         value={techStack}
-                        onChange={(event) =>
-                            setTechStack(event.target.value)
-                        }
+                        onChange={(event) => setTechStack(event.target.value)}
                     />
                 </div>
 
-                <br />
-
-                <div>
-                    <label>Skills Needed</label>
-                    <br />
+                <div className="field">
+                    <label htmlFor="skillsNeeded">Skills needed (comma separated)</label>
                     <input
+                        id="skillsNeeded"
                         type="text"
                         placeholder="Python, React"
                         value={skillsNeeded}
-                        onChange={(event) =>
-                            setSkillsNeeded(event.target.value)
-                        }
+                        onChange={(event) => setSkillsNeeded(event.target.value)}
                     />
                 </div>
 
-                <br />
-
-                <div>
-                    <label>Team Size</label>
-                    <br />
+                <div className="field">
+                    <label htmlFor="teamSize">Team size</label>
                     <input
+                        id="teamSize"
                         type="number"
                         placeholder="4"
                         value={teamSize}
-                        onChange={(event) =>
-                            setTeamSize(event.target.value)
-                        }
+                        onChange={(event) => setTeamSize(event.target.value)}
                     />
                 </div>
 
-                <br />
+                {message && <p className="notice-ok" role="status">{message}</p>}
 
-                {message && (
-                    <p style={{ color: "green" }}>
-                        {message}
-                    </p>
-                )}
+                {error && <p className="notice-error" role="alert">{error}</p>}
 
-                {error && (
-                    <p style={{ color: "red" }}>
-                        {error}
-                    </p>
-                )}
-
-                <button type="submit">
-                    Create Project
+                <button className="btn btn-primary" type="submit">
+                    Create project
                 </button>
-
             </form>
-        </>
+        </main>
     );
 }
 

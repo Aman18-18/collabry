@@ -22,75 +22,78 @@ function Applicants() {
     }
 
     if (loading) {
-        return <h2>Loading applicants...</h2>;
+        return <p className="status-msg">Loading applicants...</p>;
     }
 
     if (error) {
-        return <h2>{error}</h2>;
+        return <p className="status-msg">{error}</p>;
     }
 
     return (
-        <>
-            <h1>Applicants</h1>
+        <main className="page">
+            <div className="page-head">
+                <div>
+                    <div className="eyebrow">People who want in</div>
+                    <h1>Applicants</h1>
+                </div>
+            </div>
 
             {applications.length === 0 ? (
-                <p>No applicants yet.</p>
+                <p className="status-msg">No applicants yet.</p>
             ) : (
-                applications.map((application) => (
-                    <div key={application._id}>
-                        <h2>{application.project.title}</h2>
+                <div className="stack">
+                    {applications.map((application) => (
+                        <article className="notice" key={application._id}>
+                            <div className="eyebrow">Applying to</div>
+                            <h2>{application.project.title}</h2>
 
-                        <p>
-                            <strong>Name:</strong>{" "}
-                            {application.applicant.name}
-                        </p>
+                            <div className="detail" style={{ boxShadow: "none", border: "0", padding: 0 }}>
+                                <dl>
+                                    <dt>Name</dt>
+                                    <dd>{application.applicant.name}</dd>
+                                    <dt>Email</dt>
+                                    <dd>{application.applicant.email}</dd>
+                                    <dt>Message</dt>
+                                    <dd>{application.message}</dd>
+                                </dl>
+                            </div>
 
-                        <p>
-                            <strong>Email:</strong>{" "}
-                            {application.applicant.email}
-                        </p>
+                            <span className={`badge badge-${application.status}`}>
+                                {application.status}
+                            </span>
 
-                        <p>
-                            <strong>Message:</strong>{" "}
-                            {application.message}
-                        </p>
+                            {application.status === "pending" && (
+                                <div className="notice-actions">
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() =>
+                                            handleStatus(
+                                                application._id,
+                                                "accepted"
+                                            )
+                                        }
+                                    >
+                                        Accept
+                                    </button>
 
-                        <p>
-                            <strong>Status:</strong>{" "}
-                            {application.status}
-                        </p>
-
-                        {application.status === "pending" && (
-                            <>
-                                <button
-                                    onClick={() =>
-                                        handleStatus(
-                                            application._id,
-                                            "accepted"
-                                        )
-                                    }
-                                >
-                                    Accept
-                                </button>
-
-                                <button
-                                    onClick={() =>
-                                        handleStatus(
-                                            application._id,
-                                            "rejected"
-                                        )
-                                    }
-                                >
-                                    Reject
-                                </button>
-                            </>
-                        )}
-
-                        <hr />
-                    </div>
-                ))
+                                    <button
+                                        className="btn"
+                                        onClick={() =>
+                                            handleStatus(
+                                                application._id,
+                                                "rejected"
+                                            )
+                                        }
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            )}
+                        </article>
+                    ))}
+                </div>
             )}
-        </>
+        </main>
     );
 }
 

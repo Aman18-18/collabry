@@ -8,6 +8,7 @@ const authMiddleware = require("./middleware/authMiddleware");
 const applicationRoutes = require("./routes/applicationRoutes");
 
 const projectRoutes = require("./routes/projectRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/projects", projectRoutes);
 app.use("/applications", applicationRoutes);
+app.use("/users", userRoutes);
 
 app.get("/protected", authMiddleware, (req, res) => {
     res.json({

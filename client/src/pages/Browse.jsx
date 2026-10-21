@@ -61,71 +61,84 @@ const { search, currentPage } = state;
     });
 }
 
-    if (loading) return <h2>Loading projects...</h2>;
+    if (loading) return <p className="status-msg">Loading projects...</p>;
 
-    if (error) return <h2>{error}</h2>;
+    if (error) return <p className="status-msg">{error}</p>;
 
     return (
-        <>
-            <h1>Browse Page</h1>
+        <main className="page">
+            <div className="page-head">
+                <div>
+                    <div className="eyebrow">Open notices</div>
+                    <h1>The board</h1>
+                </div>
 
-            <input
-                type="text"
-                placeholder="Search projects..."
-                value={search}
-                onChange={handleSearch}
-            />
+                <div className="field search">
+                    <label htmlFor="search">Search</label>
+                    <input
+                        id="search"
+                        type="text"
+                        placeholder="Search projects..."
+                        value={search}
+                        onChange={handleSearch}
+                    />
+                </div>
+            </div>
 
             {currentProjects.length === 0 ? (
-                <p>No projects found.</p>
+                <p className="status-msg">No projects found.</p>
             ) : (
-                currentProjects.map((project) => (
-                    <ProjectCard
-                        key={project._id}
-                        id={project._id}
-                        title={project.title}
-                        description={project.description}
-                        techStack={project.techStack}
-                        currentTeamSize={project.currentSize}
-                        teamSize={project.teamSize}
-                        status={project.status}
-                    />
-                ))
+                <div className="board">
+                    {currentProjects.map((project) => (
+                        <ProjectCard
+                            key={project._id}
+                            id={project._id}
+                            title={project.title}
+                            description={project.description}
+                            techStack={project.techStack}
+                            currentTeamSize={project.currentSize}
+                            teamSize={project.teamSize}
+                            status={project.status}
+                        />
+                    ))}
+                </div>
             )}
 
-            <div>
+            <div className="pager">
                 <button
+                    className="btn"
                     disabled={currentPage === 1}
                     onClick={() =>
-        dispatch({
-        type: "SET_PAGE",
-        payload: currentPage - 1
-    })
-}
+                        dispatch({
+                            type: "SET_PAGE",
+                            payload: currentPage - 1
+                        })
+                    }
                 >
                     Previous
                 </button>
 
                 <span>
-                    {" "} Page {currentPage} of {totalPages || 1} {" "}
+                    Page {currentPage} of {totalPages || 1}
                 </span>
 
                 <button
+                    className="btn"
                     disabled={
                         currentPage === totalPages ||
                         totalPages === 0
                     }
                     onClick={() =>
-    dispatch({
-        type: "SET_PAGE",
-        payload: currentPage + 1
-    })
-}
+                        dispatch({
+                            type: "SET_PAGE",
+                            payload: currentPage + 1
+                        })
+                    }
                 >
                     Next
                 </button>
             </div>
-        </>
+        </main>
     );
 }
 

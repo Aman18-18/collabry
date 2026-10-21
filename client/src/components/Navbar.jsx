@@ -1,30 +1,35 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
 function Navbar() {
     const { user, logout } = useAuth();
 
     return (
-        <nav>
-            <Link to="/">Home</Link><br />
-            <Link to="/browse">Browse</Link><br />
+        <nav className="nav" aria-label="Main">
+            <div className="nav-inner">
+                <Link to="/" className="brand">Collabry</Link>
 
-            {!user && (
-                <>
-                    <Link to="/login">Login</Link><br />
-                    <Link to="/register">Register</Link><br />
-                </>
-            )}
+                <div className="nav-links">
+                    <NavLink to="/browse">Board</NavLink>
 
-            {user && (
-                <>
-                    <Link to="/postproject">Post Project</Link><br />
-                    <Link to="/my-projects">My Projects</Link><br />
-                    <Link to="/applicants">Applicants</Link><br />
-                    <Link to="/profile">Profile</Link><br />
-                    <button onClick={logout}>Logout</button>
-                </>
-            )}
+                    {!user && (
+                        <>
+                            <NavLink to="/login">Login</NavLink>
+                            <Link to="/register" className="btn btn-primary">Join</Link>
+                        </>
+                    )}
+
+                    {user && (
+                        <>
+                            <NavLink to="/my-projects">My projects</NavLink>
+                            <NavLink to="/applicants">Applicants</NavLink>
+                            <NavLink to="/profile">Profile</NavLink>
+                            <Link to="/postproject" className="btn btn-primary">Pin a project</Link>
+                            <button className="btn btn-ghost" onClick={logout}>Logout</button>
+                        </>
+                    )}
+                </div>
+            </div>
         </nav>
     );
 }

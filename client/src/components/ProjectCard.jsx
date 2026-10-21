@@ -2,6 +2,13 @@ import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import api from "../lib/axios";
 
+// techStack can arrive as an array (API) or a comma string (local data)
+function toTags(value) {
+    if (!value) return [];
+    const list = Array.isArray(value) ? value : String(value).split(",");
+    return list.map((item) => item.trim()).filter(Boolean);
+}
+
 function ProjectCard(props) {
 
     const { user } = useAuth();
@@ -24,28 +31,43 @@ function ProjectCard(props) {
         }
     }
 
+    const open = props.teamSize - props.currentTeamSize;
+
     return (
-        <div>
-            <Link to={`/project/${props.id}`}>
-                <button>Show Details</button>
-            </Link>
+        <article className="notice">
+            <div className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>
+                {props.status}
+            </div>
 
-            <h1>{props.title}</h1>
-            <h2>{props.description}</h2>
-            <p>{props.techStack}</p>
+            <h2>
+                <Link to={`/project/${props.id}`}>{props.title}</Link>
+            </h2>
 
-            <p>
-                Team Size: {props.currentTeamSize}/{props.teamSize}
-            </p>
+            <p className="notice-desc">{props.description}</p>
 
-            <p>Status: {props.status}</p>
+            <div className="tags">
+                {toTags(props.techStack).map((tag) => (
+                    <span className="tag" key={tag}>{tag}</span>
+                ))}
+            </div>
 
-            {user && (
-                <button onClick={handleApply}>
-                    Apply
-                </button>
-            )}
-        </div>
+            <div className="notice-meta">
+                <span className="notice-spots">
+                    {open > 0
+                        ? `${open} of ${props.teamSize} spots open`
+                        : "Team full"}
+                </span>
+            </div>
+
+            <div className="notice-actions">
+                <Link to={`/project/${props.id}`} className="btn">Details</Link>
+                {user && (
+                    <button className="btn btn-primary" onClick={handleApply}>
+                        Apply
+                    </button>
+                )}
+            </div>
+        </article>
     );
 }
 

@@ -74,6 +74,27 @@ router.get('/mine', authMiddleware, async (req, res) => {
 });
 
 
+// applications I have sent (the /mine route above is for the project owner)
+router.get('/sent', authMiddleware, async (req, res) => {
+    try {
+        const applications = await Application.find({
+            applicant: req.user.userId
+        })
+            .populate('project', 'title status')
+            .sort({ createdAt: -1 });
+
+        // skip applications whose project was deleted
+        res.json(applications.filter(application => application.project));
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+});
+
 router.patch('/:id', authMiddleware, async (req, res) => {
     try {
         const { status } = req.body;
