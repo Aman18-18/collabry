@@ -18,9 +18,21 @@ router.post('/:projectId/apply', authMiddleware,async (req,res)=>{
         }
 
         if(project.owner.toString() === req.user.userId){
-          return res.status(404).json({
+          return res.status(403).json({
             message :'You cannot apply to your own project'
            });
+    }
+
+    if(project.status === 'closed'){
+        return res.status(400).json({
+            message : 'This project is closed'
+        });
+    }
+
+    if(project.currentSize >= project.teamSize){
+        return res.status(400).json({
+            message : 'This team is already full'
+        });
     }
     const existingApplication = await Application.findOne({
         project : req.params.projectId,
@@ -53,16 +65,18 @@ router.post('/:projectId/apply', authMiddleware,async (req,res)=>{
 
 router.get('/mine', authMiddleware, async (req, res) => {
     try {
-        const applications = await Application.find()
+        const myProjects = await Project.find({
+            owner: req.user.userId
+        }).select('_id');
+
+        const applications = await Application.find({
+            project: { $in: myProjects.map(project => project._id) }
+        })
             .populate('project', 'title owner')
-            .populate('applicant', 'name email');
+            .populate('applicant', 'name email')
+            .sort({ createdAt: -1 });
 
-        const myApplications = applications.filter(
-            application =>
-                application.project.owner.toString() === req.user.userId
-        );
-
-        res.json(myApplications);
+        res.json(applications);
 
     } catch (error) {
         console.error(error);
@@ -108,7 +122,7 @@ router.patch('/:id', authMiddleware, async (req, res) => {
         const application = await Application.findById(req.params.id)
             .populate('project');
 
-        if (!application) {
+        if (!application || !application.project) {
             return res.status(404).json({
                 message: 'Application not found'
             });
@@ -120,9 +134,45 @@ router.patch('/:id', authMiddleware, async (req, res) => {
             });
         }
 
+        // a decision is final, otherwise the team count could drift
+        if (application.status !== 'pending') {
+            return res.status(400).json({
+                message: `This application was already ${application.status}`
+            });
+        }
+
+        if (status === 'accepted') {
+            // only counts the new member while there is still a free spot
+            const updatedProject = await Project.findOneAndUpdate(
+                {
+                    _id: application.project._id,
+                    $expr: { $lt: ['$currentSize', '$teamSize'] }
+                },
+                { $inc: { currentSize: 1 } },
+                { new: true }
+            );
+
+            if (!updatedProject) {
+                return res.status(400).json({
+                    message: 'Your team is already full'
+                });
+            }
+        }
+
         application.status = status;
 
-        await application.save();
+        try {
+            await application.save();
+        } catch (saveError) {
+            if (status === 'accepted') {
+                await Project.findByIdAndUpdate(
+                    application.project._id,
+                    { $inc: { currentSize: -1 } }
+                );
+            }
+
+            throw saveError;
+        }
 
         res.json({
             message: `Application ${status} successfully`,
@@ -137,4 +187,5 @@ router.patch('/:id', authMiddleware, async (req, res) => {
         });
     }
 });
+
 module.exports = router;

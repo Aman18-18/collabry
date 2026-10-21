@@ -55,9 +55,9 @@ function ProjectCard(props) {
                         <button
                             className="btn btn-primary"
                             onClick={() => apply()}
-                            disabled={applying || applied || open <= 0}
+                            disabled={applying || applied || open <= 0 || props.status === "closed"}
                         >
-                            {applied ? "Applied" : "Apply"}
+                            {applied ? "Applied" : props.status === "closed" ? "Closed" : open <= 0 ? "Full" : "Apply"}
                         </button>
                     )
                 )}

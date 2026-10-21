@@ -1,5 +1,6 @@
 const express = require('express');
 const Project = require('../models/project.js');
+const Application = require('../models/Applications.js');
 const authMiddleware = require('../middleware/authMiddleware.js');
 
 const router = express.Router();
@@ -177,6 +178,8 @@ router.delete('/:id', authMiddleware , async(req,res)=>{
             });
         }
 
+        // remove its applications too, so nothing is left pointing at it
+        await Application.deleteMany({ project: req.params.id });
         await Project.findByIdAndDelete(req.params.id);
 
          res.json({

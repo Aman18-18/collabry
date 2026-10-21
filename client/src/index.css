@@ -103,7 +103,7 @@ a:hover { color: var(--accent-text); }
 .notice-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; font: 500 13px var(--mono); margin-top: auto; }
 .notice-spots { color: var(--accent-text); }
 .board .notice:nth-child(4n+3) .notice-spots, .board .notice:nth-child(4n+3) .tag { color: var(--paper); border-color: var(--paper); }
-.board .notice:nth-child(4n+3) a { color: var(--paper); }
+.board .notice:nth-child(4n+3) a:not(.btn) { color: var(--paper); }
 .notice-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .notice-actions .btn { min-height: 44px; padding: 8px 20px; font-size: 15px; }
 .tags { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -159,7 +159,9 @@ a:hover { color: var(--accent-text); }
 /* browse: filter sidebar (direction D) */
 .browse-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); flex: 1; }
 .filters { background: var(--paper-dark); border-right: var(--border); padding: 32px 24px; display: flex; flex-direction: column; gap: 28px; }
-.browse-main { width: 100%; max-width: 1040px; padding: 40px 32px 80px; }
+.browse-main { width: 100%; max-width: 1180px; margin: 0 auto; padding: 40px 32px 80px; }
+.browse-main .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .browse-main .board { grid-template-columns: 1fr; } }
 .check-group { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .check-group legend { font: 500 12px var(--mono); letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 0; margin-bottom: 12px; }
 .check { display: flex; align-items: center; gap: 10px; min-height: 28px; cursor: pointer; font-size: 15px; }
@@ -197,3 +199,8 @@ a:hover { color: var(--accent-text); }
 .sheet-2 { top: 100px; left: 0; transform: rotate(-4deg); background-color: var(--moss); background-image: repeating-linear-gradient(transparent 0 22px, rgba(244, 239, 230, .35) 22px 23px); }
 .sheet-3 { top: 196px; left: 40px; transform: rotate(3deg); }
 @media (max-width: 1100px) { .hero-art { display: none; } }
+
+/* delete confirmation */
+.btn-danger { background: var(--accent-text); color: #fff; }
+.btn-danger:hover { color: #fff; }
+.confirm-box { display: flex; flex-direction: column; gap: 12px; padding-top: 4px; font-size: 15px; font-weight: 500; }

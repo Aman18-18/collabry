@@ -55,7 +55,7 @@ function Browse() {
 
     const { projects, loading, error } = useProjects();
 
-    const projectsPerPage = 6;
+    const projectsPerPage = 4;
 
     const filteredProjects = useMemo(() => {
         const query = search.toLowerCase();
