@@ -1,19 +1,24 @@
 import { Link } from "react-router-dom";
 import ProjectCard from "../components/ProjectCard";
 import useProjects from "../hooks/useProjects";
+import { newestFirst } from "../lib/projectOptions";
 
 function Home() {
   const { projects, loading } = useProjects();
 
   // newest open notices first
-  const latest = projects
-    .filter((project) => project.status === "open")
-    .slice(-3)
-    .reverse();
+  const latest = newestFirst(
+    projects.filter((project) => project.status === "open")
+  ).slice(0, 3);
 
   return (
     <>
       <main className="hero">
+        <div className="hero-art" aria-hidden="true">
+          <span className="sheet sheet-1" />
+          <span className="sheet sheet-2" />
+          <span className="sheet sheet-3" />
+        </div>
         <div className="eyebrow">Find your team on campus</div>
         <h1>Somebody here needs exactly what you can build.</h1>
         <p>
@@ -47,6 +52,8 @@ function Home() {
                 currentTeamSize={project.currentSize}
                 teamSize={project.teamSize}
                 status={project.status}
+                projectType={project.projectType}
+                ownerId={project.owner?._id}
               />
             ))}
           </div>

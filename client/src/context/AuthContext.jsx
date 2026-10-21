@@ -24,6 +24,8 @@ function AuthProvider({ children }) {
         localStorage.setItem("user", JSON.stringify(user));
 
         setUser(user);
+
+        return user;
     }
 
     async function register(name, email, password) {

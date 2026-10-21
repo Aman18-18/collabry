@@ -10,6 +10,7 @@ import Register from "./pages/Register"
 import ProjectDetails from "./pages/ProjectDetails"
 const MyProjects = lazy(() => import("./pages/MyProjects"));
 const Applicants = lazy(() => import("./pages/Applicants"));
+const EditProject = lazy(() => import("./pages/EditProject"));
 import { Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -32,6 +33,7 @@ function App() {
             <Route path="/postproject" element={<PostProject />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/my-projects" element={<MyProjects />} />
+            <Route path="/edit-project/:id" element={<EditProject />} />
             <Route path="/applicants" element={<Applicants />} />
         </Route>
     </Routes>

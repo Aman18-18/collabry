@@ -4,6 +4,9 @@ const authMiddleware = require('../middleware/authMiddleware.js');
 
 const router = express.Router();
 
+const ROLES = ['frontend', 'backend', 'design', 'ml', 'mobile'];
+const PROJECT_TYPES = ['hackathon', 'minor-project', 'startup', 'other'];
+
 router.get('/', async(req,res) =>{
 
     try{
@@ -29,11 +32,27 @@ router.post('/' , authMiddleware , async(req,res)=>{
             description,
             techStack,
             skillsNeeded,
-            teamSize
+            teamSize,
+            roles,
+            projectType
         } = req.body;
         if(!title || !description || !teamSize){
             return res.status(400).json({
                 message : 'Title, description, teamSize are requiredd fields'
+            });
+        }
+
+        const roleList = Array.isArray(roles) ? roles : [];
+
+        if (roleList.some(role => !ROLES.includes(role))) {
+            return res.status(400).json({
+                message : 'Invalid role selected'
+            });
+        }
+
+        if (projectType !== undefined && !PROJECT_TYPES.includes(projectType)) {
+            return res.status(400).json({
+                message : 'Invalid project type'
             });
         }
 
@@ -43,6 +62,8 @@ router.post('/' , authMiddleware , async(req,res)=>{
             techStack,
             skillsNeeded,
             teamSize,
+            roles: roleList,
+            projectType,
             owner :  req.user.userId
         });
 
@@ -74,10 +95,56 @@ router.put('/:id', authMiddleware , async(req, res) =>{
             });
         }
 
+        // only these fields can be edited (owner, currentSize etc. stay untouchable)
+        const editable = [
+            'title', 'description', 'techStack', 'skillsNeeded',
+            'teamSize', 'roles', 'projectType', 'status'
+        ];
+
+        const updates = {};
+
+        for (const field of editable) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        if (updates.roles && (!Array.isArray(updates.roles) ||
+            updates.roles.some(role => !ROLES.includes(role)))) {
+            return res.status(400).json({
+                message : 'Invalid role selected'
+            });
+        }
+
+        if (updates.projectType !== undefined &&
+            !PROJECT_TYPES.includes(updates.projectType)) {
+            return res.status(400).json({
+                message : 'Invalid project type'
+            });
+        }
+
+        if (updates.status !== undefined &&
+            !['open', 'closed'].includes(updates.status)) {
+            return res.status(400).json({
+                message : 'Invalid status'
+            });
+        }
+
+        if (updates.teamSize !== undefined) {
+            updates.teamSize = Number(updates.teamSize);
+
+            if (!Number.isInteger(updates.teamSize) ||
+                updates.teamSize < project.currentSize) {
+                return res.status(400).json({
+                    message : 'Team size cannot be smaller than the current team'
+                });
+            }
+        }
+
         const updateProject = await Project.findByIdAndUpdate(
             req.params.id,
-            req.body,
-             {new : true}
+            updates,
+            {new : true, runValidators : true}
         );
 
         res.json({

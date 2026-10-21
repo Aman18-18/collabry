@@ -73,6 +73,10 @@ function MyProjects() {
                                     {project.currentSize} of {project.teamSize} joined
                                 </span>
                             </div>
+                            <div className="notice-actions">
+                                <Link to={`/project/${project._id}`} className="btn">View</Link>
+                                <Link to={`/edit-project/${project._id}`} className="btn btn-primary">Edit</Link>
+                            </div>
                         </article>
                     ))}
                 </div>

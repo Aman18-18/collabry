@@ -1,6 +1,8 @@
 import useApplications from "../hooks/useApplications";
+import useToast from "../hooks/useToast";
 
 function Applicants() {
+    const toast = useToast();
     const {
         applications,
         loading,
@@ -12,11 +14,12 @@ function Applicants() {
         try {
             const response = await updateApplication(id, status);
 
-            alert(response.message);
+            toast.show(response.message);
         } catch (error) {
-            alert(
+            toast.show(
                 error.response?.data?.message ||
-                "Failed to update application"
+                "Failed to update application",
+                "error"
             );
         }
     }

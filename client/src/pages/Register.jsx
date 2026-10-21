@@ -1,10 +1,13 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import useToast from "../hooks/useToast";
 
 function Register() {
-    const { register } = useAuth();
+    const { user, register } = useAuth();
+    const navigate = useNavigate();
+    const toast = useToast();
 
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -46,12 +49,8 @@ function Register() {
 
         try {
             await register(name, email, password);
-            setMessage("Registration successful! You can now log in.");
-
-            setName("");
-            setEmail("");
-            setPassword("");
-            setConfirmPassword("");
+            toast.show("Account created. Log in to continue.");
+            navigate("/login");
         } catch (error) {
             setError(
                 error.response?.data?.message ||
@@ -59,6 +58,10 @@ function Register() {
             );
         }
     };
+
+    if (user) {
+        return <Navigate to="/profile" replace />;
+    }
 
     return (
         <main className="page page-narrow">

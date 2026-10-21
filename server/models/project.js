@@ -19,6 +19,16 @@ const projectSchema = new mongoose.Schema({
         type: [String]
     },
 
+    roles: {
+        type: [String]
+    },
+
+    projectType: {
+        type: String,
+        enum: ["hackathon", "minor-project", "startup", "other"],
+        default: "other"
+    },
+
     teamSize: {
         type: Number,
         required: true

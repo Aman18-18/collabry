@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import useToast from "../hooks/useToast";
 
 function Login() {
-    const { login } = useAuth();
+    const { user, login } = useAuth();
+    const location = useLocation();
+    const toast = useToast();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -24,13 +27,19 @@ function Login() {
         }
 
         try {
-            await login(email, password);
+            const loggedInUser = await login(email, password);
+            toast.show(`Welcome back, ${loggedInUser.name}`);
         } catch (error) {
             setError(
                 error.response?.data?.message || "Login failed"
             );
         }
     };
+
+    // already logged in (or just logged in): go where they were headed, else profile
+    if (user) {
+        return <Navigate to={location.state?.from || "/profile"} replace />;
+    }
 
     return (
         <main className="page page-narrow">

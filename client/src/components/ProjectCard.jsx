@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
-import api from "../lib/axios";
+import useApply from "../hooks/useApply";
+import { TYPE_LABELS } from "../lib/projectOptions";
 
 // techStack can arrive as an array (API) or a comma string (local data)
 function toTags(value) {
@@ -10,33 +11,16 @@ function toTags(value) {
 }
 
 function ProjectCard(props) {
-
     const { user } = useAuth();
-
-    async function handleApply() {
-        try {
-            const response = await api.post(
-                `/applications/${props.id}/apply`,
-                {
-                    message: "I would like to contribute to this project."
-                }
-            );
-
-            alert(response.data.message);
-
-        } catch (error) {
-            alert(
-                error.response?.data?.message || "Failed to apply"
-            );
-        }
-    }
+    const { apply, applying, applied } = useApply(props.id);
 
     const open = props.teamSize - props.currentTeamSize;
+    const isOwner = user && props.ownerId === user.id;
 
     return (
-        <article className="notice">
+        <article className={`notice${props.highlight ? " notice-new" : ""}`}>
             <div className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>
-                {props.status}
+                {[TYPE_LABELS[props.projectType], props.status].filter(Boolean).join(" · ")}
             </div>
 
             <h2>
@@ -61,10 +45,21 @@ function ProjectCard(props) {
 
             <div className="notice-actions">
                 <Link to={`/project/${props.id}`} className="btn">Details</Link>
-                {user && (
-                    <button className="btn btn-primary" onClick={handleApply}>
-                        Apply
-                    </button>
+
+                {isOwner ? (
+                    <Link to={`/edit-project/${props.id}`} className="btn btn-primary">
+                        Edit
+                    </Link>
+                ) : (
+                    user && (
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => apply()}
+                            disabled={applying || applied || open <= 0}
+                        >
+                            {applied ? "Applied" : "Apply"}
+                        </button>
+                    )
                 )}
             </div>
         </article>

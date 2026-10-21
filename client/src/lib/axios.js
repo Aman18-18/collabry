@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://collabry-production.up.railway.app"
+    baseURL: "https://collabry-1l0j.onrender.com"
 });
 
 api.interceptors.request.use((config) => {
