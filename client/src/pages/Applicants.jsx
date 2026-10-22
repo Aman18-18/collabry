@@ -1,5 +1,6 @@
 import useApplications from "../hooks/useApplications";
 import useToast from "../hooks/useToast";
+import api from "../lib/axios";
 
 function Applicants() {
     const toast = useToast();
@@ -10,11 +11,24 @@ function Applicants() {
         updateApplication
     } = useApplications();
 
-    async function handleStatus(id, status) {
+    async function handleStatus(id, status, projectId) {
         try {
             const response = await updateApplication(id, status);
 
             toast.show(response.message);
+
+            if (status === "accepted") {
+                // nudge the owner if the new member has nowhere to go next
+                try {
+                    const link = await api.get(`/projects/${projectId}/team-link`);
+
+                    if (!link.data.teamLink) {
+                        toast.show("Tip: add a team chat link under Edit so your new member can reach you.");
+                    }
+                } catch {
+                    // the tip is optional, ignore failures
+                }
+            }
         } catch (error) {
             toast.show(
                 error.response?.data?.message ||
@@ -70,10 +84,7 @@ function Applicants() {
                                     <button
                                         className="btn btn-primary"
                                         onClick={() =>
-                                            handleStatus(
-                                                application._id,
-                                                "accepted"
-                                            )
+                                            handleStatus(application._id, "accepted", application.project._id)
                                         }
                                     >
                                         Accept
@@ -82,10 +93,7 @@ function Applicants() {
                                     <button
                                         className="btn"
                                         onClick={() =>
-                                            handleStatus(
-                                                application._id,
-                                                "rejected"
-                                            )
+                                            handleStatus(application._id, "rejected", application.project._id)
                                         }
                                     >
                                         Reject

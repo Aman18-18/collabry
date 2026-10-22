@@ -224,3 +224,11 @@ a:hover { color: var(--accent-text); }
 .ticker-dot { padding-left: 26px; color: var(--paper); opacity: .5; }
 @keyframes ticker-move { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
+
+/* team section, chat link hints */
+.field-hint { font-size: 13px; color: var(--muted); }
+.team { display: flex; flex-direction: column; gap: 12px; }
+.team-list { list-style: none; margin: 0; padding: 0; }
+.team-list li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFC7B6; font-weight: 500; }
+.team-list li:first-child { border-top: var(--border); }
+.row-end { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }

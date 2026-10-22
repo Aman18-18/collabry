@@ -12,6 +12,7 @@ function EditProject() {
     const toast = useToast();
 
     const [project, setProject] = useState(null);
+    const [teamLink, setTeamLink] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -24,6 +25,14 @@ function EditProject() {
                 if (!found) {
                     setError("Project not found");
                     return;
+                }
+
+                // the link is not in the public list, only the owner can fetch it
+                try {
+                    const linkResponse = await api.get(`/projects/${id}/team-link`);
+                    setTeamLink(linkResponse.data.teamLink || "");
+                } catch {
+                    setTeamLink("");
                 }
 
                 setProject(found);
@@ -64,6 +73,7 @@ function EditProject() {
         techStack: (project.techStack || []).join(", "),
         skillsNeeded: (project.skillsNeeded || []).join(", "),
         teamSize: project.teamSize,
+        teamLink,
         roles: project.roles || [],
         projectType: project.projectType || "other",
         status: project.status || "open"

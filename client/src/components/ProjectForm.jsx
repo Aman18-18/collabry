@@ -13,6 +13,7 @@ function ProjectForm({ initial, submitLabel, showStatus, minTeamSize, onSubmit }
     const [roles, setRoles] = useState(initial.roles);
     const [projectType, setProjectType] = useState(initial.projectType);
     const [status, setStatus] = useState(initial.status);
+    const [teamLink, setTeamLink] = useState(initial.teamLink || "");
 
     const [error, setError] = useState("");
     const [saving, setSaving] = useState(false);
@@ -39,6 +40,7 @@ function ProjectForm({ initial, submitLabel, showStatus, minTeamSize, onSubmit }
                 teamSize: Number(teamSize),
                 roles,
                 projectType,
+                teamLink: teamLink.trim(),
                 ...(showStatus ? { status } : {})
             });
         } catch (error) {
@@ -74,6 +76,15 @@ function ProjectForm({ initial, submitLabel, showStatus, minTeamSize, onSubmit }
                 <label htmlFor="skillsNeeded">Skills needed (comma separated)</label>
                 <input id="skillsNeeded" type="text" placeholder="Python, React"
                     value={skillsNeeded} onChange={(e) => setSkillsNeeded(e.target.value)} />
+            </div>
+
+            <div className="field">
+                <label htmlFor="teamLink">Team chat link (optional)</label>
+                <input id="teamLink" type="url" placeholder="https://chat.whatsapp.com/..."
+                    value={teamLink} onChange={(e) => setTeamLink(e.target.value)} />
+                <span className="field-hint">
+                    A WhatsApp or Discord invite. Only people you accept can see it.
+                </span>
             </div>
 
             <div className="form-row">

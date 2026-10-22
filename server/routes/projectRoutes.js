@@ -8,11 +8,36 @@ const router = express.Router();
 const ROLES = ['frontend', 'backend', 'design', 'ml', 'mobile'];
 const PROJECT_TYPES = ['hackathon', 'minor-project', 'startup', 'other'];
 
+// returns { value } or { error }; only plain web links are accepted
+function cleanTeamLink(raw) {
+    if (raw === undefined) return { value: undefined };
+
+    const text = String(raw).trim();
+
+    if (text === '') return { value: '' };
+
+    if (text.length > 300) {
+        return { error: 'Team link is too long' };
+    }
+
+    try {
+        const url = new URL(text);
+
+        if (!['https:', 'http:'].includes(url.protocol)) {
+            throw new Error('bad protocol');
+        }
+    } catch (error) {
+        return { error: 'Team link must be a web link starting with https://' };
+    }
+
+    return { value: text };
+}
+
 router.get('/', async(req,res) =>{
 
     try{
         const projects = await Project.find()
-                         .populate('owner','name email');
+                         .populate('owner','name');
 
         res.json(projects);                 
 
@@ -35,7 +60,8 @@ router.post('/' , authMiddleware , async(req,res)=>{
             skillsNeeded,
             teamSize,
             roles,
-            projectType
+            projectType,
+            teamLink
         } = req.body;
         if(!title || !description || !teamSize){
             return res.status(400).json({
@@ -57,6 +83,14 @@ router.post('/' , authMiddleware , async(req,res)=>{
             });
         }
 
+        const link = cleanTeamLink(teamLink);
+
+        if (link.error) {
+            return res.status(400).json({
+                message : link.error
+            });
+        }
+
         const project = await Project.create({
             title,
             description,
@@ -65,6 +99,7 @@ router.post('/' , authMiddleware , async(req,res)=>{
             teamSize,
             roles: roleList,
             projectType,
+            teamLink: link.value,
             owner :  req.user.userId
         });
 
@@ -76,6 +111,79 @@ router.post('/' , authMiddleware , async(req,res)=>{
         console.error(error);
         res.status(500).json({
             message :'Server error'
+        });
+    }
+});
+
+
+// who is on the team: names only, safe to show publicly
+router.get('/:id/members', async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id)
+            .populate('owner', 'name');
+
+        if (!project) {
+            return res.status(404).json({
+                message : 'Project not found'
+            });
+        }
+
+        const accepted = await Application.find({
+            project : req.params.id,
+            status : 'accepted'
+        })
+            .populate('applicant', 'name')
+            .sort({ createdAt : 1 });
+
+        res.json({
+            owner : { name : project.owner?.name },
+            members : accepted
+                .filter(application => application.applicant)
+                .map(application => ({
+                    _id : application._id,
+                    name : application.applicant.name
+                }))
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message : 'Server error'
+        });
+    }
+});
+
+// the chat link: only the owner and accepted members may read it
+router.get('/:id/team-link', authMiddleware, async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id).select('+teamLink owner');
+
+        if (!project) {
+            return res.status(404).json({
+                message : 'Project not found'
+            });
+        }
+
+        const isOwner = project.owner.toString() === req.user.userId;
+
+        if (!isOwner) {
+            const membership = await Application.findOne({
+                project : req.params.id,
+                applicant : req.user.userId,
+                status : 'accepted'
+            });
+
+            if (!membership) {
+                return res.status(403).json({
+                    message : 'Only team members can see this'
+                });
+            }
+        }
+
+        res.json({ teamLink : project.teamLink || '', isOwner });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message : 'Server error'
         });
     }
 });
@@ -99,7 +207,7 @@ router.put('/:id', authMiddleware , async(req, res) =>{
         // only these fields can be edited (owner, currentSize etc. stay untouchable)
         const editable = [
             'title', 'description', 'techStack', 'skillsNeeded',
-            'teamSize', 'roles', 'projectType', 'status'
+            'teamSize', 'roles', 'projectType', 'status', 'teamLink'
         ];
 
         const updates = {};
@@ -108,6 +216,18 @@ router.put('/:id', authMiddleware , async(req, res) =>{
             if (req.body[field] !== undefined) {
                 updates[field] = req.body[field];
             }
+        }
+
+        if (updates.teamLink !== undefined) {
+            const link = cleanTeamLink(updates.teamLink);
+
+            if (link.error) {
+                return res.status(400).json({
+                    message : link.error
+                });
+            }
+
+            updates.teamLink = link.value;
         }
 
         if (updates.roles && (!Array.isArray(updates.roles) ||

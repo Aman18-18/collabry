@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../lib/axios";
 import useAuth from "../hooks/useAuth";
 import useProjects from "../hooks/useProjects";
+import { safeLink } from "../lib/safeLink";
 
 function githubUrl(value) {
     if (!value) return "";
@@ -218,9 +219,25 @@ function Profile() {
                                         <Link to={`/project/${application.project._id}`} className="title">
                                             {application.project.title}
                                         </Link>
-                                        <span className={`badge badge-${application.status}`}>
-                                            {application.status}
-                                        </span>
+                                        <div className="row-end">
+                                            <span className={`badge badge-${application.status}`}>
+                                                {application.status}
+                                            </span>
+                                            {application.status === "accepted" && (
+                                                safeLink(application.project.teamLink) ? (
+                                                    <a
+                                                        className="btn btn-primary"
+                                                        href={safeLink(application.project.teamLink)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        Join team chat
+                                                    </a>
+                                                ) : (
+                                                    <span className="eyebrow">No chat link yet</span>
+                                                )
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>

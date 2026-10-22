@@ -29,6 +29,14 @@ const projectSchema = new mongoose.Schema({
         default: "other"
     },
 
+    // chat invite for accepted members; hidden from every query unless asked for
+    teamLink: {
+        type: String,
+        default: "",
+        maxlength: 300,
+        select: false
+    },
+
     teamSize: {
         type: Number,
         required: true

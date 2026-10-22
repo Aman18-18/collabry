@@ -94,11 +94,24 @@ router.get('/sent', authMiddleware, async (req, res) => {
         const applications = await Application.find({
             applicant: req.user.userId
         })
-            .populate('project', 'title status')
+            .populate({ path: 'project', select: 'title status +teamLink' })
             .sort({ createdAt: -1 });
 
-        // skip applications whose project was deleted
-        res.json(applications.filter(application => application.project));
+        // skip applications whose project was deleted, and only
+        // accepted applicants get to see the team link
+        const result = applications
+            .filter(application => application.project)
+            .map(application => {
+                const plain = application.toObject();
+
+                if (application.status !== 'accepted') {
+                    delete plain.project.teamLink;
+                }
+
+                return plain;
+            });
+
+        res.json(result);
 
     } catch (error) {
         console.error(error);

@@ -9,6 +9,7 @@ const EMPTY = {
     techStack: "",
     skillsNeeded: "",
     teamSize: "",
+    teamLink: "",
     roles: [],
     projectType: "hackathon",
     status: "open"

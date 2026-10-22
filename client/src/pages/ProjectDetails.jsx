@@ -4,6 +4,7 @@ import api from "../lib/axios";
 import useAuth from "../hooks/useAuth";
 import useApply from "../hooks/useApply";
 import { TYPE_LABELS } from "../lib/projectOptions";
+import { safeLink } from "../lib/safeLink";
 
 function ProjectDetails() {
     const { id } = useParams();
@@ -14,6 +15,35 @@ function ProjectDetails() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
+
+    // team list is public; the chat link only comes back for the owner and accepted members
+    const [team, setTeam] = useState(null);
+    const [teamLink, setTeamLink] = useState(null);
+
+    useEffect(() => {
+        async function fetchTeam() {
+            try {
+                const response = await api.get(`/projects/${id}/members`);
+                setTeam(response.data);
+            } catch {
+                setTeam(null);
+            }
+
+            if (!user) {
+                setTeamLink(null);
+                return;
+            }
+
+            try {
+                const response = await api.get(`/projects/${id}/team-link`);
+                setTeamLink(response.data.teamLink || "");
+            } catch {
+                setTeamLink(null);
+            }
+        }
+
+        fetchTeam();
+    }, [id, user]);
 
     useEffect(() => {
         async function fetchProject() {
@@ -59,6 +89,8 @@ function ProjectDetails() {
         ));
 
     const isOwner = user && project.owner?._id === user.id;
+    const isMember = !isOwner && teamLink !== null;
+    const chatHref = safeLink(teamLink || "");
     const spotsLeft = project.teamSize - project.currentSize;
     const unavailable = project.status === "closed" || spotsLeft <= 0;
 
@@ -90,13 +122,56 @@ function ProjectDetails() {
                     <dd>{project.owner?.name}</dd>
                 </dl>
 
+                {team && (
+                    <div className="team">
+                        <h2>Team</h2>
+                        <ul className="team-list">
+                            <li>
+                                <span>{team.owner.name}</span>
+                                <span className="eyebrow">Owner</span>
+                            </li>
+                            {team.members.map((member) => (
+                                <li key={member._id}>
+                                    <span>{member.name}</span>
+                                    <span className="eyebrow">Member</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 <div className="apply-box">
                     {isOwner ? (
                         <>
                             <p>This is your project.</p>
-                            <Link to={`/edit-project/${project._id}`} className="btn btn-primary">
-                                Edit project
-                            </Link>
+                            <div className="notice-actions">
+                                <Link to={`/edit-project/${project._id}`} className="btn btn-primary">
+                                    Edit project
+                                </Link>
+                                {chatHref && (
+                                    <a className="btn" href={chatHref} target="_blank" rel="noopener noreferrer">
+                                        Open team chat
+                                    </a>
+                                )}
+                            </div>
+                            {!chatHref && (
+                                <p className="field-hint">
+                                    Add a team chat link under Edit so accepted members can reach you.
+                                </p>
+                            )}
+                        </>
+                    ) : isMember ? (
+                        <>
+                            <p>You're on this team.</p>
+                            {chatHref ? (
+                                <a className="btn btn-primary" href={chatHref} target="_blank" rel="noopener noreferrer">
+                                    Join the team chat
+                                </a>
+                            ) : (
+                                <p className="field-hint">
+                                    The owner hasn't added a team chat link yet.
+                                </p>
+                            )}
                         </>
                     ) : !user ? (
                         <>
