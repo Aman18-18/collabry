@@ -1,14 +1,19 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../lib/axios";
 import useAuth from "../hooks/useAuth";
 import useApply from "../hooks/useApply";
+import useToast from "../hooks/useToast";
+import useNotifications from "../hooks/useNotifications";
+import ConfirmButton from "../components/ConfirmButton";
 import { TYPE_LABELS } from "../lib/projectOptions";
 import { safeLink } from "../lib/safeLink";
 
 function ProjectDetails() {
     const { id } = useParams();
     const { user } = useAuth();
+    const toast = useToast();
+    const { refresh } = useNotifications();
     const { apply, applying, applied } = useApply(id);
 
     const [project, setProject] = useState(null);
@@ -20,8 +25,78 @@ function ProjectDetails() {
     const [team, setTeam] = useState(null);
     const [teamLink, setTeamLink] = useState(null);
 
+    // this visitor's own application to this project, if any
+    const [myApplication, setMyApplication] = useState(null);
+
     // used for a gentle nudge when the applicant's own profile is empty
     const [myProfile, setMyProfile] = useState(null);
+
+    const loadProject = useCallback(async (silent = false) => {
+        try {
+            if (!silent) setLoading(true);
+            setError("");
+
+            const response = await api.get("/projects");
+            const foundProject = response.data.find((item) => item._id === id);
+
+            if (!foundProject) {
+                setError("Project not found");
+                return;
+            }
+
+            setProject(foundProject);
+        } catch (error) {
+            setError(
+                error.response?.data?.message || "Failed to load project"
+            );
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
+    const loadTeam = useCallback(async () => {
+        try {
+            const response = await api.get(`/projects/${id}/members`);
+            setTeam(response.data);
+        } catch {
+            setTeam(null);
+        }
+
+        if (!user) {
+            setTeamLink(null);
+            setMyApplication(null);
+            return;
+        }
+
+        try {
+            const response = await api.get(`/projects/${id}/team-link`);
+            setTeamLink(response.data.teamLink || "");
+        } catch {
+            setTeamLink(null);
+        }
+
+        try {
+            const response = await api.get("/applications/sent");
+            setMyApplication(
+                response.data.find((item) => item.project._id === id) || null
+            );
+        } catch {
+            setMyApplication(null);
+        }
+    }, [id, user]);
+
+    useEffect(() => {
+        loadProject();
+    }, [loadProject]);
+
+    useEffect(() => {
+        loadTeam();
+    }, [loadTeam]);
+
+    // right after applying, show the pending state
+    useEffect(() => {
+        if (applied) loadTeam();
+    }, [applied, loadTeam]);
 
     useEffect(() => {
         if (!user) return;
@@ -31,60 +106,20 @@ function ProjectDetails() {
             .catch(() => setMyProfile(null));
     }, [user]);
 
-    useEffect(() => {
-        async function fetchTeam() {
-            try {
-                const response = await api.get(`/projects/${id}/members`);
-                setTeam(response.data);
-            } catch {
-                setTeam(null);
-            }
-
-            if (!user) {
-                setTeamLink(null);
-                return;
-            }
-
-            try {
-                const response = await api.get(`/projects/${id}/team-link`);
-                setTeamLink(response.data.teamLink || "");
-            } catch {
-                setTeamLink(null);
-            }
+    async function runAction(request, fallbackMessage) {
+        try {
+            const response = await request();
+            toast.show(response.data.message);
+        } catch (error) {
+            toast.show(
+                error.response?.data?.message || fallbackMessage,
+                "error"
+            );
         }
 
-        fetchTeam();
-    }, [id, user]);
-
-    useEffect(() => {
-        async function fetchProject() {
-            try {
-                setLoading(true);
-                setError("");
-
-                const response = await api.get("/projects");
-                const foundProject = response.data.find(
-                    (item) => item._id === id
-                );
-
-                if (!foundProject) {
-                    setError("Project not found");
-                    return;
-                }
-
-                setProject(foundProject);
-            } catch (error) {
-                setError(
-                    error.response?.data?.message ||
-                    "Failed to load project"
-                );
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchProject();
-    }, [id]);
+        await Promise.all([loadProject(true), loadTeam()]);
+        refresh();
+    }
 
     if (loading) {
         return <p className="status-msg">Loading project...</p>;
@@ -100,7 +135,6 @@ function ProjectDetails() {
         ));
 
     const isOwner = user && project.owner?._id === user.id;
-    const isMember = !isOwner && teamLink !== null;
     const chatHref = safeLink(teamLink || "");
     const spotsLeft = project.teamSize - project.currentSize;
     const unavailable = project.status === "closed" || spotsLeft <= 0;
@@ -108,6 +142,138 @@ function ProjectDetails() {
     function handleApply(event) {
         event.preventDefault();
         apply(message);
+    }
+
+    function renderApplyBox() {
+        if (isOwner) {
+            return (
+                <>
+                    <p>This is your project.</p>
+                    <div className="notice-actions">
+                        <Link to={`/edit-project/${project._id}`} className="btn btn-primary">
+                            Edit project
+                        </Link>
+                        {chatHref && (
+                            <a className="btn" href={chatHref} target="_blank" rel="noopener noreferrer">
+                                Open team chat
+                            </a>
+                        )}
+                    </div>
+                    {!chatHref && (
+                        <p className="field-hint">
+                            Add a team chat link under Edit so accepted members can reach you.
+                        </p>
+                    )}
+                </>
+            );
+        }
+
+        if (!user) {
+            return (
+                <>
+                    <p>Want to join this team?</p>
+                    <Link
+                        to="/login"
+                        state={{ from: `/project/${project._id}` }}
+                        className="btn btn-primary"
+                    >
+                        Log in to apply
+                    </Link>
+                </>
+            );
+        }
+
+        if (myApplication?.status === "accepted") {
+            return (
+                <>
+                    <p>You're on this team.</p>
+                    <div className="notice-actions">
+                        {chatHref && (
+                            <a className="btn btn-primary" href={chatHref} target="_blank" rel="noopener noreferrer">
+                                Join the team chat
+                            </a>
+                        )}
+                        <ConfirmButton
+                            label="Leave team"
+                            question="Leave this team? You will lose access to the team chat."
+                            confirmLabel="Yes, leave"
+                            onConfirm={() => runAction(
+                                () => api.delete(`/applications/${myApplication._id}`),
+                                "Failed to leave the team"
+                            )}
+                        />
+                    </div>
+                    {!chatHref && (
+                        <p className="field-hint">
+                            The owner hasn't added a team chat link yet.
+                        </p>
+                    )}
+                </>
+            );
+        }
+
+        if (myApplication?.status === "pending") {
+            return (
+                <>
+                    <p>Your application is waiting for the owner.</p>
+                    <ConfirmButton
+                        label="Withdraw application"
+                        question="Withdraw your application?"
+                        confirmLabel="Yes, withdraw"
+                        onConfirm={() => runAction(
+                            () => api.delete(`/applications/${myApplication._id}`),
+                            "Failed to withdraw"
+                        )}
+                    />
+                </>
+            );
+        }
+
+        if (myApplication?.status === "rejected") {
+            return <p>Your application wasn't accepted this time.</p>;
+        }
+
+        if (myApplication?.status === "removed") {
+            return <p>You were removed from this team.</p>;
+        }
+
+        if (unavailable) {
+            return (
+                <p className="eyebrow">
+                    {project.status === "closed" ? "This project is closed" : "This team is full"}
+                </p>
+            );
+        }
+
+        return (
+            <form onSubmit={handleApply} className="stack" style={{ gap: 14 }}>
+                {myProfile && !myProfile.bio && !(myProfile.skills?.length) && (
+                    <p className="field-hint">
+                        Your profile is empty. Owners see your skills and bio when you apply.{" "}
+                        <Link to="/profile" className="ulink">Add them first</Link>.
+                    </p>
+                )}
+
+                <div className="field">
+                    <label htmlFor="apply-message">Message to the team (optional)</label>
+                    <textarea
+                        id="apply-message"
+                        placeholder="What can you bring to the project?"
+                        value={message}
+                        onChange={(event) => setMessage(event.target.value)}
+                        disabled={applied}
+                    />
+                </div>
+
+                <button
+                    className="btn btn-primary"
+                    type="submit"
+                    disabled={applying || applied}
+                >
+                    {applied ? "Applied" : applying ? "Applying..." : "Apply to this project"}
+                </button>
+            </form>
+        );
     }
 
     return (
@@ -156,7 +322,19 @@ function ProjectDetails() {
                                     <Link to={`/user/${member.userId}`} className="ulink">
                                         {member.name}
                                     </Link>
-                                    <span className="eyebrow">Member</span>
+                                    {isOwner ? (
+                                        <ConfirmButton
+                                            label="Remove"
+                                            question={`Remove ${member.name} from the team? They won't be able to apply again.`}
+                                            confirmLabel="Yes, remove"
+                                            onConfirm={() => runAction(
+                                                () => api.post(`/applications/${member._id}/remove`),
+                                                "Failed to remove member"
+                                            )}
+                                        />
+                                    ) : (
+                                        <span className="eyebrow">Member</span>
+                                    )}
                                 </li>
                             ))}
                         </ul>
@@ -164,82 +342,7 @@ function ProjectDetails() {
                 )}
 
                 <div className="apply-box">
-                    {isOwner ? (
-                        <>
-                            <p>This is your project.</p>
-                            <div className="notice-actions">
-                                <Link to={`/edit-project/${project._id}`} className="btn btn-primary">
-                                    Edit project
-                                </Link>
-                                {chatHref && (
-                                    <a className="btn" href={chatHref} target="_blank" rel="noopener noreferrer">
-                                        Open team chat
-                                    </a>
-                                )}
-                            </div>
-                            {!chatHref && (
-                                <p className="field-hint">
-                                    Add a team chat link under Edit so accepted members can reach you.
-                                </p>
-                            )}
-                        </>
-                    ) : isMember ? (
-                        <>
-                            <p>You're on this team.</p>
-                            {chatHref ? (
-                                <a className="btn btn-primary" href={chatHref} target="_blank" rel="noopener noreferrer">
-                                    Join the team chat
-                                </a>
-                            ) : (
-                                <p className="field-hint">
-                                    The owner hasn't added a team chat link yet.
-                                </p>
-                            )}
-                        </>
-                    ) : !user ? (
-                        <>
-                            <p>Want to join this team?</p>
-                            <Link
-                                to="/login"
-                                state={{ from: `/project/${project._id}` }}
-                                className="btn btn-primary"
-                            >
-                                Log in to apply
-                            </Link>
-                        </>
-                    ) : unavailable ? (
-                        <p className="eyebrow">
-                            {project.status === "closed" ? "This project is closed" : "This team is full"}
-                        </p>
-                    ) : (
-                        <form onSubmit={handleApply} className="stack" style={{ gap: 14 }}>
-                            {myProfile && !myProfile.bio && !(myProfile.skills?.length) && (
-                                <p className="field-hint">
-                                    Your profile is empty. Owners see your skills and bio when you apply.{" "}
-                                    <Link to="/profile" className="ulink">Add them first</Link>.
-                                </p>
-                            )}
-
-                            <div className="field">
-                                <label htmlFor="apply-message">Message to the team (optional)</label>
-                                <textarea
-                                    id="apply-message"
-                                    placeholder="What can you bring to the project?"
-                                    value={message}
-                                    onChange={(event) => setMessage(event.target.value)}
-                                    disabled={applied}
-                                />
-                            </div>
-
-                            <button
-                                className="btn btn-primary"
-                                type="submit"
-                                disabled={applying || applied}
-                            >
-                                {applied ? "Applied" : applying ? "Applying..." : "Apply to this project"}
-                            </button>
-                        </form>
-                    )}
+                    {renderApplyBox()}
                 </div>
             </article>
         </main>

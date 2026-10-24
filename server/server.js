@@ -12,6 +12,9 @@ const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
+// Render sits in front of the app; this makes req.ip the real visitor
+app.set("trust proxy", 1);
+
 app.use(cors());
 app.use(express.json());
 

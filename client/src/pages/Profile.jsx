@@ -5,6 +5,8 @@ import useAuth from "../hooks/useAuth";
 import useProjects from "../hooks/useProjects";
 import { safeLink } from "../lib/safeLink";
 import useNotifications from "../hooks/useNotifications";
+import useToast from "../hooks/useToast";
+import ConfirmButton from "../components/ConfirmButton";
 
 function githubUrl(value) {
     if (!value) return "";
@@ -15,6 +17,7 @@ function Profile() {
     const { user } = useAuth();
     const { projects } = useProjects();
     const { refresh } = useNotifications();
+    const toast = useToast();
 
     const [profile, setProfile] = useState(null);
     const [applications, setApplications] = useState([]);
@@ -56,6 +59,21 @@ function Profile() {
     const pinned = projects.filter(
         (project) => project.owner?._id === user?.id
     );
+
+    async function handleLeave(application, doneMessage) {
+        try {
+            const response = await api.delete(`/applications/${application._id}`);
+            toast.show(response.data.message || doneMessage);
+
+            const sent = await api.get("/applications/sent");
+            setApplications(sent.data);
+        } catch (error) {
+            toast.show(
+                error.response?.data?.message || "Something went wrong",
+                "error"
+            );
+        }
+    }
 
     function startEdit() {
         setForm({
@@ -241,6 +259,22 @@ function Profile() {
                                                 ) : (
                                                     <span className="eyebrow">No chat link yet</span>
                                                 )
+                                            )}
+                                            {application.status === "pending" && (
+                                                <ConfirmButton
+                                                    label="Withdraw"
+                                                    question="Withdraw this application?"
+                                                    confirmLabel="Yes, withdraw"
+                                                    onConfirm={() => handleLeave(application)}
+                                                />
+                                            )}
+                                            {application.status === "accepted" && (
+                                                <ConfirmButton
+                                                    label="Leave team"
+                                                    question="Leave this team? You will lose access to the team chat."
+                                                    confirmLabel="Yes, leave"
+                                                    onConfirm={() => handleLeave(application)}
+                                                />
                                             )}
                                         </div>
                                     </div>

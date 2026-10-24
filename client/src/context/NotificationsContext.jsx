@@ -50,11 +50,13 @@ function NotificationsProvider({ children }) {
 
             if (data.decisions.length === 1) {
                 const [decision] = data.decisions;
-                show(
-                    decision.status === "accepted"
-                        ? `You were accepted to "${decision.title}"`
-                        : `Your application to "${decision.title}" was not accepted`
-                );
+                const wording = {
+                    accepted: `You were accepted to "${decision.title}"`,
+                    removed: `You were removed from "${decision.title}"`,
+                    rejected: `Your application to "${decision.title}" was not accepted`
+                };
+
+                show(wording[decision.status]);
             } else if (data.unseenDecisions > 1) {
                 show(`${data.unseenDecisions} of your applications have an update. Check your profile.`);
             }

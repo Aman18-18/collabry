@@ -102,7 +102,7 @@ router.get('/summary', authMiddleware, async (req, res) => {
 
         const unseenFilter = {
             applicant: req.user.userId,
-            status: { $in: ['accepted', 'rejected'] },
+            status: { $in: ['accepted', 'rejected', 'removed'] },
             decisionSeen: false
         };
 
@@ -256,6 +256,124 @@ router.patch('/:id', authMiddleware, async (req, res) => {
             message: `Application ${status} successfully`,
             application
         });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+});
+
+// an applicant withdraws a pending application, or leaves a team they joined
+router.delete('/:id', authMiddleware, async (req, res) => {
+    try {
+        const application = await Application.findById(req.params.id);
+
+        if (!application) {
+            return res.status(404).json({
+                message: 'Application not found'
+            });
+        }
+
+        if (application.applicant.toString() !== req.user.userId) {
+            return res.status(403).json({
+                message: 'You can only change your own application'
+            });
+        }
+
+        if (application.status === 'pending') {
+            const deleted = await Application.findOneAndDelete({
+                _id: application._id,
+                status: 'pending'
+            });
+
+            if (!deleted) {
+                return res.status(400).json({
+                    message: 'This application just changed. Refresh and try again.'
+                });
+            }
+
+            return res.json({ message: 'Application withdrawn' });
+        }
+
+        if (application.status === 'accepted') {
+            // claim the removal first, so two quick clicks can't free two spots
+            const deleted = await Application.findOneAndDelete({
+                _id: application._id,
+                status: 'accepted'
+            });
+
+            if (!deleted) {
+                return res.status(400).json({
+                    message: 'This application just changed. Refresh and try again.'
+                });
+            }
+
+            await Project.findOneAndUpdate(
+                { _id: application.project, currentSize: { $gt: 1 } },
+                { $inc: { currentSize: -1 } }
+            );
+
+            return res.json({ message: 'You left the team' });
+        }
+
+        res.status(400).json({
+            message: 'There is nothing to withdraw'
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+});
+
+// the owner removes an accepted member (they cannot re-apply afterwards)
+router.post('/:id/remove', authMiddleware, async (req, res) => {
+    try {
+        const application = await Application.findById(req.params.id)
+            .populate('project');
+
+        if (!application || !application.project) {
+            return res.status(404).json({
+                message: 'Application not found'
+            });
+        }
+
+        if (application.project.owner.toString() !== req.user.userId) {
+            return res.status(403).json({
+                message: 'You are not the owner of this project'
+            });
+        }
+
+        if (application.status !== 'accepted') {
+            return res.status(400).json({
+                message: 'Only accepted members can be removed'
+            });
+        }
+
+        const claimed = await Application.findOneAndUpdate(
+            { _id: application._id, status: 'accepted' },
+            { status: 'removed', decisionSeen: false },
+            { new: true }
+        );
+
+        if (!claimed) {
+            return res.status(400).json({
+                message: 'This member was already removed'
+            });
+        }
+
+        await Project.findOneAndUpdate(
+            { _id: application.project._id, currentSize: { $gt: 1 } },
+            { $inc: { currentSize: -1 } }
+        );
+
+        res.json({ message: 'Member removed from the team' });
 
     } catch (error) {
         console.error(error);

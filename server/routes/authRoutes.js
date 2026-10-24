@@ -1,17 +1,73 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const rateLimit = require("express-rate-limit");
 const User = require("../models/user.js");
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+const tooMany = {
+    message: "Too many attempts. Please wait a few minutes and try again."
+};
+
+// generous per-IP cap (a whole campus can share one IP)
+const loginByIp = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: tooMany
+});
+
+// strict per-account cap, and only failed attempts count
+const loginByEmail = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    skipSuccessfulRequests: true,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+        String(req.body?.email ?? "").trim().toLowerCase() || "unknown",
+    message: tooMany
+});
+
+const registerByIp = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: tooMany
+});
+
+router.post("/register", registerByIp, async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        // strings only, trimmed; emails are always stored in lowercase
+        const name = String(req.body.name ?? "").trim();
+        const email = String(req.body.email ?? "").trim().toLowerCase();
+        const password = String(req.body.password ?? "");
 
         if (!name || !email || !password) {
             return res.status(400).json({
                 message: "Name, email and password are required"
+            });
+        }
+
+        if (!/^\S+@\S+\.\S+$/.test(email)) {
+            return res.status(400).json({
+                message: "Enter a valid email address"
+            });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({
+                message: "Password must be at least 8 characters"
+            });
+        }
+
+        // bcrypt only reads the first 72 bytes, so longer ones are pointless
+        if (password.length > 72) {
+            return res.status(400).json({
+                message: "Password must be 72 characters or fewer"
             });
         }
 
@@ -50,9 +106,10 @@ router.post("/register", async (req, res) => {
     }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginByIp, loginByEmail, async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const email = String(req.body.email ?? "").trim().toLowerCase();
+        const password = String(req.body.password ?? "");
 
         if (!email || !password) {
             return res.status(400).json({

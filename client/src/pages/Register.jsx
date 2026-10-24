@@ -42,6 +42,11 @@ function Register() {
             return;
         }
 
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters");
+            return;
+        }
+
         if (password !== confirmPassword) {
             setError("Passwords do not match");
             return;
@@ -89,6 +94,10 @@ function Register() {
                     <input
                         id="email"
                         type="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        autoComplete="email"
                         placeholder="Enter your email"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
@@ -100,10 +109,12 @@ function Register() {
                     <input
                         id="password"
                         type="password"
+                        autoComplete="new-password"
                         placeholder="Enter your password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                     />
+                    <span className="field-hint">At least 8 characters.</span>
                 </div>
 
                 <div className="field">

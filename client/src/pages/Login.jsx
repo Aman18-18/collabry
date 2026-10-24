@@ -56,6 +56,10 @@ function Login() {
                     <input
                         id="email"
                         type="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        autoComplete="email"
                         placeholder="Enter your email"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
@@ -67,6 +71,7 @@ function Login() {
                     <input
                         id="password"
                         type="password"
+                        autoComplete="current-password"
                         placeholder="Enter your password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}

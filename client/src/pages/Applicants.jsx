@@ -2,6 +2,7 @@ import useApplications from "../hooks/useApplications";
 import useToast from "../hooks/useToast";
 import api from "../lib/axios";
 import useNotifications from "../hooks/useNotifications";
+import ConfirmButton from "../components/ConfirmButton";
 import { Link } from "react-router-dom";
 import { githubHref } from "../lib/safeLink";
 
@@ -12,8 +13,22 @@ function Applicants() {
         applications,
         loading,
         error,
+        fetchApplications,
         updateApplication
     } = useApplications();
+
+    async function handleRemove(application) {
+        try {
+            const response = await api.post(`/applications/${application._id}/remove`);
+            toast.show(response.data.message);
+            await fetchApplications(true);
+        } catch (error) {
+            toast.show(
+                error.response?.data?.message || "Failed to remove member",
+                "error"
+            );
+        }
+    }
 
     async function handleStatus(id, status, projectId) {
         try {
@@ -134,6 +149,15 @@ function Applicants() {
                             <span className={`badge badge-${application.status}`}>
                                 {application.status}
                             </span>
+
+                            {application.status === "accepted" && (
+                                <ConfirmButton
+                                    label="Remove from team"
+                                    question={`Remove ${application.applicant.name} from the team? They won't be able to apply again.`}
+                                    confirmLabel="Yes, remove"
+                                    onConfirm={() => handleRemove(application)}
+                                />
+                            )}
 
                             {application.status === "pending" && (
                                 <div className="notice-actions">
