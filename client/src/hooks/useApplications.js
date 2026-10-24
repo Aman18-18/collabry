@@ -6,9 +6,9 @@ function useApplications() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    async function fetchApplications() {
+    async function fetchApplications(silent = false) {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
             setError("");
 
             const response = await api.get("/applications/mine");
@@ -29,7 +29,7 @@ function useApplications() {
             status
         });
 
-        await fetchApplications();
+        await fetchApplications(true);
 
         return response.data;
     }

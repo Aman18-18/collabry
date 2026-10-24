@@ -1,9 +1,18 @@
 import useApplications from "../hooks/useApplications";
 import useToast from "../hooks/useToast";
 import api from "../lib/axios";
+import useNotifications from "../hooks/useNotifications";
+import { safeLink } from "../lib/safeLink";
+
+// a username or a full link, always turned into a safe web address
+function githubHref(value) {
+    if (!value) return "";
+    return safeLink(value.startsWith("http") ? value : `https://github.com/${value}`);
+}
 
 function Applicants() {
     const toast = useToast();
+    const { refresh } = useNotifications();
     const {
         applications,
         loading,
@@ -16,6 +25,7 @@ function Applicants() {
             const response = await updateApplication(id, status);
 
             toast.show(response.message);
+            refresh();
 
             if (status === "accepted") {
                 // nudge the owner if the new member has nowhere to go next
@@ -59,7 +69,9 @@ function Applicants() {
                 <p className="status-msg">No applicants yet.</p>
             ) : (
                 <div className="stack">
-                    {applications.map((application) => (
+                    {[...applications]
+                        .sort((a, b) => (b.status === "pending") - (a.status === "pending"))
+                        .map((application) => (
                         <article className="notice" key={application._id}>
                             <div className="eyebrow">Applying to</div>
                             <h2>{application.project.title}</h2>
@@ -70,6 +82,51 @@ function Applicants() {
                                     <dd>{application.applicant.name}</dd>
                                     <dt>Email</dt>
                                     <dd>{application.applicant.email}</dd>
+                                    {(application.applicant.college || application.applicant.branch || application.applicant.year) && (
+                                        <>
+                                            <dt>Studies</dt>
+                                            <dd>
+                                                {[
+                                                    application.applicant.college,
+                                                    application.applicant.branch,
+                                                    application.applicant.year ? `Year ${application.applicant.year}` : ""
+                                                ].filter(Boolean).join(" · ")}
+                                            </dd>
+                                        </>
+                                    )}
+                                    {application.applicant.skills?.length > 0 && (
+                                        <>
+                                            <dt>Skills</dt>
+                                            <dd>
+                                                <div className="tags">
+                                                    {application.applicant.skills.map((skill) => (
+                                                        <span className="tag" key={skill}>{skill}</span>
+                                                    ))}
+                                                </div>
+                                            </dd>
+                                        </>
+                                    )}
+                                    {application.applicant.bio && (
+                                        <>
+                                            <dt>About</dt>
+                                            <dd>{application.applicant.bio}</dd>
+                                        </>
+                                    )}
+                                    {githubHref(application.applicant.github) && (
+                                        <>
+                                            <dt>GitHub</dt>
+                                            <dd>
+                                                <a
+                                                    href={githubHref(application.applicant.github)}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ textDecoration: "underline" }}
+                                                >
+                                                    {application.applicant.github}
+                                                </a>
+                                            </dd>
+                                        </>
+                                    )}
                                     <dt>Message</dt>
                                     <dd>{application.message}</dd>
                                 </dl>

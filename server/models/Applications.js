@@ -23,6 +23,12 @@ const applicationSchema = new mongoose.Schema({
         default: "pending"
     },
 
+    // false when a decision was made that the applicant hasn't looked at yet
+    decisionSeen: {
+        type: Boolean,
+        default: true
+    },
+
     createdAt: {
         type: Date,
         default: Date.now

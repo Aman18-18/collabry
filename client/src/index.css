@@ -232,3 +232,6 @@ a:hover { color: var(--accent-text); }
 .team-list li { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFC7B6; font-weight: 500; }
 .team-list li:first-child { border-top: var(--border); }
 .row-end { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* unread number bubble on nav links */
+.count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 6px; background: var(--accent-text); color: #fff; border-radius: 999px; font: 500 12px var(--mono); vertical-align: 2px; text-decoration: none; }

@@ -4,6 +4,7 @@ import api from "../lib/axios";
 import useAuth from "../hooks/useAuth";
 import useProjects from "../hooks/useProjects";
 import { safeLink } from "../lib/safeLink";
+import useNotifications from "../hooks/useNotifications";
 
 function githubUrl(value) {
     if (!value) return "";
@@ -13,6 +14,7 @@ function githubUrl(value) {
 function Profile() {
     const { user } = useAuth();
     const { projects } = useProjects();
+    const { refresh } = useNotifications();
 
     const [profile, setProfile] = useState(null);
     const [applications, setApplications] = useState([]);
@@ -35,6 +37,9 @@ function Profile() {
 
                 setProfile(me.data);
                 setApplications(sent.data);
+
+                // they are looking at their applications now, so clear the badge
+                api.post("/applications/seen").then(refresh).catch(() => {});
             } catch (error) {
                 setError(
                     error.response?.data?.message ||
@@ -46,7 +51,7 @@ function Profile() {
         }
 
         load();
-    }, []);
+    }, [refresh]);
 
     const pinned = projects.filter(
         (project) => project.owner?._id === user?.id

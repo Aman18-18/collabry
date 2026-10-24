@@ -73,7 +73,7 @@ router.get('/mine', authMiddleware, async (req, res) => {
             project: { $in: myProjects.map(project => project._id) }
         })
             .populate('project', 'title owner')
-            .populate('applicant', 'name email')
+            .populate('applicant', 'name email college branch year skills bio github')
             .sort({ createdAt: -1 });
 
         res.json(applications);
@@ -87,6 +87,70 @@ router.get('/mine', authMiddleware, async (req, res) => {
     }
 });
 
+
+// numbers for the navbar badges + what to announce after login
+router.get('/summary', authMiddleware, async (req, res) => {
+    try {
+        const myProjects = await Project.find({
+            owner: req.user.userId
+        }).select('_id');
+
+        const pending = await Application.countDocuments({
+            project: { $in: myProjects.map(project => project._id) },
+            status: 'pending'
+        });
+
+        const unseenFilter = {
+            applicant: req.user.userId,
+            status: { $in: ['accepted', 'rejected'] },
+            decisionSeen: false
+        };
+
+        const unseenDecisions = await Application.countDocuments(unseenFilter);
+
+        const latest = await Application.find(unseenFilter)
+            .populate('project', 'title')
+            .sort({ createdAt: -1 })
+            .limit(5);
+
+        res.json({
+            pending,
+            unseenDecisions,
+            decisions: latest
+                .filter(application => application.project)
+                .map(application => ({
+                    title: application.project.title,
+                    status: application.status
+                }))
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+});
+
+// called when the applicant opens their profile
+router.post('/seen', authMiddleware, async (req, res) => {
+    try {
+        await Application.updateMany(
+            { applicant: req.user.userId, decisionSeen: false },
+            { decisionSeen: true }
+        );
+
+        res.json({ message: 'Marked as seen' });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+});
 
 // applications I have sent (the /mine route above is for the project owner)
 router.get('/sent', authMiddleware, async (req, res) => {
@@ -173,6 +237,7 @@ router.patch('/:id', authMiddleware, async (req, res) => {
         }
 
         application.status = status;
+        application.decisionSeen = false;
 
         try {
             await application.save();
