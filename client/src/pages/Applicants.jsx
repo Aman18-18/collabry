@@ -2,13 +2,8 @@ import useApplications from "../hooks/useApplications";
 import useToast from "../hooks/useToast";
 import api from "../lib/axios";
 import useNotifications from "../hooks/useNotifications";
-import { safeLink } from "../lib/safeLink";
-
-// a username or a full link, always turned into a safe web address
-function githubHref(value) {
-    if (!value) return "";
-    return safeLink(value.startsWith("http") ? value : `https://github.com/${value}`);
-}
+import { Link } from "react-router-dom";
+import { githubHref } from "../lib/safeLink";
 
 function Applicants() {
     const toast = useToast();
@@ -79,7 +74,11 @@ function Applicants() {
                             <div className="detail" style={{ boxShadow: "none", border: "0", padding: 0 }}>
                                 <dl>
                                     <dt>Name</dt>
-                                    <dd>{application.applicant.name}</dd>
+                                    <dd>
+                                        <Link to={`/user/${application.applicant._id}`} className="ulink">
+                                            {application.applicant.name}
+                                        </Link>
+                                    </dd>
                                     <dt>Email</dt>
                                     <dd>{application.applicant.email}</dd>
                                     {(application.applicant.college || application.applicant.branch || application.applicant.year) && (

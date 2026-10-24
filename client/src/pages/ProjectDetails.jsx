@@ -20,6 +20,17 @@ function ProjectDetails() {
     const [team, setTeam] = useState(null);
     const [teamLink, setTeamLink] = useState(null);
 
+    // used for a gentle nudge when the applicant's own profile is empty
+    const [myProfile, setMyProfile] = useState(null);
+
+    useEffect(() => {
+        if (!user) return;
+
+        api.get("/users/me")
+            .then((response) => setMyProfile(response.data))
+            .catch(() => setMyProfile(null));
+    }, [user]);
+
     useEffect(() => {
         async function fetchTeam() {
             try {
@@ -119,7 +130,15 @@ function ProjectDetails() {
                     <dt>Team</dt>
                     <dd>{project.currentSize} of {project.teamSize} joined</dd>
                     <dt>Posted by</dt>
-                    <dd>{project.owner?.name}</dd>
+                    <dd>
+                        {project.owner?._id ? (
+                            <Link to={`/user/${project.owner._id}`} className="ulink">
+                                {project.owner.name}
+                            </Link>
+                        ) : (
+                            project.owner?.name
+                        )}
+                    </dd>
                 </dl>
 
                 {team && (
@@ -127,12 +146,16 @@ function ProjectDetails() {
                         <h2>Team</h2>
                         <ul className="team-list">
                             <li>
-                                <span>{team.owner.name}</span>
+                                <Link to={`/user/${team.owner._id}`} className="ulink">
+                                    {team.owner.name}
+                                </Link>
                                 <span className="eyebrow">Owner</span>
                             </li>
                             {team.members.map((member) => (
                                 <li key={member._id}>
-                                    <span>{member.name}</span>
+                                    <Link to={`/user/${member.userId}`} className="ulink">
+                                        {member.name}
+                                    </Link>
                                     <span className="eyebrow">Member</span>
                                 </li>
                             ))}
@@ -190,6 +213,13 @@ function ProjectDetails() {
                         </p>
                     ) : (
                         <form onSubmit={handleApply} className="stack" style={{ gap: 14 }}>
+                            {myProfile && !myProfile.bio && !(myProfile.skills?.length) && (
+                                <p className="field-hint">
+                                    Your profile is empty. Owners see your skills and bio when you apply.{" "}
+                                    <Link to="/profile" className="ulink">Add them first</Link>.
+                                </p>
+                            )}
+
                             <div className="field">
                                 <label htmlFor="apply-message">Message to the team (optional)</label>
                                 <textarea

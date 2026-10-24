@@ -136,11 +136,12 @@ router.get('/:id/members', async (req, res) => {
             .sort({ createdAt : 1 });
 
         res.json({
-            owner : { name : project.owner?.name },
+            owner : { _id : project.owner?._id, name : project.owner?.name },
             members : accepted
                 .filter(application => application.applicant)
                 .map(application => ({
                     _id : application._id,
+                    userId : application.applicant._id,
                     name : application.applicant.name
                 }))
         });

@@ -7,3 +7,9 @@ export function safeLink(value) {
         return "";
     }
 }
+
+// a GitHub username or a full link, always returned as a safe web address
+export function githubHref(value) {
+    if (!value) return "";
+    return safeLink(value.startsWith("http") ? value : `https://github.com/${value}`);
+}

@@ -11,6 +11,7 @@ import ProjectDetails from "./pages/ProjectDetails"
 const MyProjects = lazy(() => import("./pages/MyProjects"));
 const Applicants = lazy(() => import("./pages/Applicants"));
 const EditProject = lazy(() => import("./pages/EditProject"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
 import { Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -34,6 +35,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/my-projects" element={<MyProjects />} />
             <Route path="/edit-project/:id" element={<EditProject />} />
+            <Route path="/user/:id" element={<UserProfile />} />
             <Route path="/applicants" element={<Applicants />} />
         </Route>
     </Routes>

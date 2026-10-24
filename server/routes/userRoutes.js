@@ -1,5 +1,7 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const User = require("../models/user.js");
+const Project = require("../models/project.js");
 const authMiddleware = require("../middleware/authMiddleware.js");
 
 const router = express.Router();
@@ -62,6 +64,32 @@ router.put("/me", authMiddleware, async (req, res) => {
         ).select("-password");
 
         res.json({ message: "Profile updated successfully", user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// any logged-in user can read another member's public profile.
+// Only this fixed list of fields is returned: no email, no password.
+router.get("/:id", authMiddleware, async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const user = await User.findById(req.params.id)
+            .select("name college branch year skills bio github");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const projects = await Project.find({ owner: user._id })
+            .select("title status projectType teamSize currentSize createdAt")
+            .sort({ createdAt: -1 });
+
+        res.json({ user, projects });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error" });

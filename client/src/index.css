@@ -235,3 +235,5 @@ a:hover { color: var(--accent-text); }
 
 /* unread number bubble on nav links */
 .count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 6px; background: var(--accent-text); color: #fff; border-radius: 999px; font: 500 12px var(--mono); vertical-align: 2px; text-decoration: none; }
+
+.ulink { text-decoration: underline; text-underline-offset: 3px; }
