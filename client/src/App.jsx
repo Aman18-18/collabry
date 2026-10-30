@@ -12,10 +12,15 @@ const MyProjects = lazy(() => import("./pages/MyProjects"));
 const Applicants = lazy(() => import("./pages/Applicants"));
 const EditProject = lazy(() => import("./pages/EditProject"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Contact = lazy(() => import("./pages/Contact"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 import { Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Navbar from "./components/Navbar"
+import Footer from "./components/Footer"
 
 function App() {
   return (
@@ -29,6 +34,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/project/:id" element={<ProjectDetails />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/contact" element={<Contact />} />
 
         <Route element={<ProtectedRoute />}>
             <Route path="/postproject" element={<PostProject />} />
@@ -38,8 +46,11 @@ function App() {
             <Route path="/user/:id" element={<UserProfile />} />
             <Route path="/applicants" element={<Applicants />} />
         </Route>
+
+        <Route path="*" element={<NotFound />} />
     </Routes>
 </Suspense>
+      <Footer />
     </>
   );
 }
