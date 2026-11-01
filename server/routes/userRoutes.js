@@ -1,10 +1,23 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const rateLimit = require("express-rate-limit");
 const User = require("../models/user.js");
 const Project = require("../models/project.js");
 const authMiddleware = require("../middleware/authMiddleware.js");
 
 const router = express.Router();
+
+// stops someone with a stolen session from guessing the current password
+const changePasswordLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    skipSuccessfulRequests: true,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => String(req.user?.userId ?? "unknown"),
+    message: { message: "Too many attempts. Please wait a few minutes and try again." }
+});
 
 // accepts an array or a comma separated string
 const toList = (value) => {
@@ -64,6 +77,51 @@ router.put("/me", authMiddleware, async (req, res) => {
         ).select("-password");
 
         res.json({ message: "Profile updated successfully", user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// change your own password (needs the current one)
+router.put("/me/password", authMiddleware, changePasswordLimiter, async (req, res) => {
+    try {
+        const currentPassword = String(req.body.currentPassword ?? "");
+        const newPassword = String(req.body.newPassword ?? "");
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: "Fill in both passwords" });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ message: "New password must be at least 8 characters" });
+        }
+
+        if (newPassword.length > 72) {
+            return res.status(400).json({ message: "New password must be 72 characters or fewer" });
+        }
+
+        const user = await User.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // a wrong password is a 400 on purpose: a 401 would log the person out
+        const matches = await bcrypt.compare(currentPassword, user.password);
+
+        if (!matches) {
+            return res.status(400).json({ message: "Your current password is wrong" });
+        }
+
+        if (currentPassword === newPassword) {
+            return res.status(400).json({ message: "Choose a different password" });
+        }
+
+        const hashed = await bcrypt.hash(newPassword, 10);
+        await User.updateOne({ _id: user._id }, { password: hashed });
+
+        res.json({ message: "Password changed" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error" });

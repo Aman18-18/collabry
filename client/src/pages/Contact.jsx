@@ -38,6 +38,14 @@ function Contact() {
                 <li>whether it was on a phone or a computer, and a screenshot if you can.</li>
             </ul>
 
+            <h2>Forgot your password?</h2>
+            <p>
+                There's no automatic reset yet. Message me from a profile I know is
+                yours, and tell me the email address you registered with. Once I'm
+                sure it's you, I'll send you a temporary password. Log in with it
+                and change it right away from your Profile.
+            </p>
+
             <h2>Deleting your account</h2>
             <p>
                 There's no delete button yet. Contact me from the email address you

@@ -87,6 +87,10 @@ function Login() {
                 <p className="form-foot">
                     New here? <Link to="/register">Create an account</Link>
                 </p>
+
+                <p className="form-foot">
+                    Forgot your password? <Link to="/contact">Contact me</Link> and I'll reset it.
+                </p>
             </form>
         </main>
     );

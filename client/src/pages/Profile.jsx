@@ -7,6 +7,7 @@ import { safeLink } from "../lib/safeLink";
 import useNotifications from "../hooks/useNotifications";
 import useToast from "../hooks/useToast";
 import ConfirmButton from "../components/ConfirmButton";
+import ChangePassword from "../components/ChangePassword";
 
 function githubUrl(value) {
     if (!value) return "";
@@ -281,6 +282,11 @@ function Profile() {
                                 ))}
                             </div>
                         )}
+                    </section>
+
+                    <section className="profile-section">
+                        <h2>Account</h2>
+                        <ChangePassword />
                     </section>
                 </div>
             </div>
