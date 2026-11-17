@@ -18,7 +18,9 @@ function ProjectCard(props) {
     const isOwner = user && props.ownerId === user.id;
 
     return (
-        <article className={`notice${props.highlight ? " notice-new" : ""}`}>
+        <article className={`notice notice-pinned${props.highlight ? " notice-new" : ""}`}>
+            <span className="notice-pin" aria-hidden="true" />
+
             <div className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>
                 {[TYPE_LABELS[props.projectType], props.status].filter(Boolean).join(" · ")}
             </div>

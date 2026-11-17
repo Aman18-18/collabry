@@ -92,18 +92,40 @@ a:hover { color: var(--accent-text); }
   padding: 28px; display: flex; flex-direction: column; gap: 16px; min-height: 300px;
   transition: transform .15s;
 }
+.notice-pinned { position: relative; }
+.notice-pin {
+  position: absolute; top: -1px; right: 30px; z-index: 2;
+  display: block; width: 10px; height: 14px;
+  border: 1px solid #8D2114; border-radius: 2px 2px 5px 5px;
+  background: linear-gradient(90deg, #A52B1B, #F05238 38%, #D33A24 72%, #8D2114);
+  transform: rotate(-25deg);
+  filter: drop-shadow(3px 6px 3px rgba(27, 26, 23, .34));
+  pointer-events: none;
+}
+.notice-pin::before {
+  content: ""; position: absolute; top: -8px; left: -7px; z-index: 1;
+  width: 22px; height: 15px; border: var(--border); border-radius: 50%;
+  background: radial-gradient(ellipse at 32% 24%, #FFB5A6 0 8%, #F36A54 22%, var(--accent) 57%, #972513 100%);
+  box-shadow: inset 0 -2px 1px rgba(87, 12, 0, .3);
+}
+.notice-pin::after {
+  content: ""; position: absolute; top: -5px; left: -2px; z-index: 2;
+  width: 6px; height: 3px; border-radius: 50%;
+  background: #FFFDF8; opacity: .9; transform: rotate(-20deg);
+}
+.board .notice:nth-child(4n+2) .notice-pin { transform: rotate(18deg); }
+.board .notice:nth-child(4n+3) .notice-pin { transform: rotate(-8deg); }
+.board .notice:nth-child(4n+4) .notice-pin { transform: rotate(25deg); }
 .board .notice:nth-child(4n+1) { transform: rotate(-1deg); }
-.board .notice:nth-child(4n+2) { transform: rotate(.8deg) translateY(10px); }
-.board .notice:nth-child(4n+3) { transform: rotate(.5deg); background: var(--moss); color: var(--paper); }
-.board .notice:nth-child(4n+4) { transform: rotate(-.7deg) translateY(6px); }
+.board .notice:nth-child(4n+2) { transform: rotate(.8deg) translateY(10px); background: #FFF1B8; }
+.board .notice:nth-child(4n+3) { transform: rotate(.5deg); background: #F8DCD5; }
+.board .notice:nth-child(4n+4) { transform: rotate(-.7deg) translateY(6px); background: #DCECF7; }
 .board .notice:hover { transform: rotate(0) translateY(-4px); }
 .notice h2 a { color: inherit; }
 .notice h2 { font-size: 26px; }
 .notice-desc { font-size: 16px; line-height: 1.55; }
 .notice-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; font: 500 13px var(--mono); margin-top: auto; }
 .notice-spots { color: var(--accent-text); }
-.board .notice:nth-child(4n+3) .notice-spots, .board .notice:nth-child(4n+3) .tag { color: var(--paper); border-color: var(--paper); }
-.board .notice:nth-child(4n+3) a:not(.btn) { color: var(--paper); }
 .notice-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .notice-actions .btn { min-height: 44px; padding: 8px 20px; font-size: 15px; }
 .tags { display: flex; gap: 6px; flex-wrap: wrap; }

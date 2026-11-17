@@ -33,7 +33,7 @@ function Footer() {
 
             <div className="footer-bottom">
                 <span>© {new Date().getFullYear()} Collabry. All rights reserved.</span>
-                <span>Made by a student, for students.</span>
+                <span>Built for builders.</span>
             </div>
         </footer>
     );
