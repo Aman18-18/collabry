@@ -300,6 +300,7 @@ function ProjectDetails() {
                         {project.owner?._id ? (
                             <Link to={`/user/${project.owner._id}`} className="ulink">
                                 {project.owner.name}
+                                {project.owner.username && ` · @${project.owner.username}`}
                             </Link>
                         ) : (
                             project.owner?.name
@@ -314,6 +315,7 @@ function ProjectDetails() {
                             <li>
                                 <Link to={`/user/${team.owner._id}`} className="ulink">
                                     {team.owner.name}
+                                    {team.owner.username && ` · @${team.owner.username}`}
                                 </Link>
                                 <span className="eyebrow">Owner</span>
                             </li>
@@ -321,6 +323,7 @@ function ProjectDetails() {
                                 <li key={member._id}>
                                     <Link to={`/user/${member.userId}`} className="ulink">
                                         {member.name}
+                                        {member.username && ` · @${member.username}`}
                                     </Link>
                                     {isOwner ? (
                                         <ConfirmButton

@@ -73,7 +73,7 @@ router.get('/mine', authMiddleware, async (req, res) => {
             project: { $in: myProjects.map(project => project._id) }
         })
             .populate('project', 'title owner')
-            .populate('applicant', 'name email college branch year skills bio github')
+            .populate('applicant', 'name username email college branch year skills bio github')
             .sort({ createdAt: -1 });
 
         res.json(applications);

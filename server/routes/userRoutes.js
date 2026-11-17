@@ -5,6 +5,7 @@ const rateLimit = require("express-rate-limit");
 const User = require("../models/user.js");
 const Project = require("../models/project.js");
 const authMiddleware = require("../middleware/authMiddleware.js");
+const { normalizeUsername, validateUsername } = require("../lib/username.js");
 
 const router = express.Router();
 
@@ -43,7 +44,16 @@ router.get("/me", authMiddleware, async (req, res) => {
 // only these fields can be edited, so nobody can touch email or password here
 router.put("/me", authMiddleware, async (req, res) => {
     try {
-        const { name, college, branch, year, skills, bio, github } = req.body;
+        const {
+            name,
+            username: requestedUsername,
+            college,
+            branch,
+            year,
+            skills,
+            bio,
+            github
+        } = req.body;
         const updates = {};
 
         if (name !== undefined) {
@@ -51,6 +61,28 @@ router.put("/me", authMiddleware, async (req, res) => {
                 return res.status(400).json({ message: "Name cannot be empty" });
             }
             updates.name = String(name).trim();
+        }
+
+        if (requestedUsername !== undefined) {
+            const username = normalizeUsername(requestedUsername);
+            const usernameError = validateUsername(username);
+
+            if (usernameError) {
+                return res.status(400).json({ message: usernameError });
+            }
+
+            const existingUsername = await User.findOne({
+                username,
+                _id: { $ne: req.user.userId }
+            });
+
+            if (existingUsername) {
+                return res.status(409).json({
+                    message: "That username is already taken"
+                });
+            }
+
+            updates.username = username;
         }
 
         if (college !== undefined) updates.college = String(college).trim();
@@ -78,6 +110,12 @@ router.put("/me", authMiddleware, async (req, res) => {
 
         res.json({ message: "Profile updated successfully", user });
     } catch (error) {
+        if (error.code === 11000 && error.keyPattern?.username) {
+            return res.status(409).json({
+                message: "That username is already taken"
+            });
+        }
+
         console.error(error);
         res.status(500).json({ message: "Server error" });
     }
@@ -137,7 +175,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
         }
 
         const user = await User.findById(req.params.id)
-            .select("name college branch year skills bio github");
+            .select("name username college branch year skills bio github");
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });

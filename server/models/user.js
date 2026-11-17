@@ -6,6 +6,15 @@ const userSchema = new mongoose.Schema({
         required: true
     },
 
+    // Stored lowercase; sparse keeps existing accounts without a username valid.
+    username: {
+        type: String,
+        unique: true,
+        sparse: true,
+        lowercase: true,
+        trim: true
+    },
+
     email: {
         type: String,
         required: true,

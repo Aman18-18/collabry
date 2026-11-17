@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://collabry-1l0j.onrender.com"
+    baseURL: import.meta.env.DEV
+        ? "http://localhost:5000"
+        : "https://collabry-1l0j.onrender.com"
 });
 
 api.interceptors.request.use((config) => {

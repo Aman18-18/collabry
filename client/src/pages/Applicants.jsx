@@ -92,6 +92,7 @@ function Applicants() {
                                     <dd>
                                         <Link to={`/user/${application.applicant._id}`} className="ulink">
                                             {application.applicant.name}
+                                            {application.applicant.username && ` · @${application.applicant.username}`}
                                         </Link>
                                     </dd>
                                     <dt>Email</dt>

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import useToast from "../hooks/useToast";
+import { normalizeUsername, validateUsername } from "../lib/username";
 
 function Register() {
     const { user, register } = useAuth();
@@ -10,6 +11,7 @@ function Register() {
     const toast = useToast();
 
     const [name, setName] = useState("");
+    const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,6 +26,13 @@ function Register() {
 
         if (name.trim().length === 0) {
             setError("Name is required");
+            return;
+        }
+
+        const usernameIssue = validateUsername(username);
+
+        if (usernameIssue) {
+            setError(usernameIssue);
             return;
         }
 
@@ -53,7 +62,7 @@ function Register() {
         }
 
         try {
-            await register(name, email, password);
+            await register(name, normalizeUsername(username), email, password);
             toast.show("Account created. Log in to continue.");
             navigate("/login");
         } catch (error) {
@@ -102,6 +111,26 @@ function Register() {
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
                     />
+                </div>
+
+                <div className="field">
+                    <label htmlFor="username">Username</label>
+                    <input
+                        id="username"
+                        type="text"
+                        required
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        autoComplete="username"
+                        maxLength={21}
+                        placeholder="your_name"
+                        value={username}
+                        onChange={(event) => setUsername(event.target.value)}
+                    />
+                    <span className="field-hint">
+                        We’ll show it as @username. Use 3–20 letters, numbers, or underscores.
+                    </span>
                 </div>
 
                 <div className="field">

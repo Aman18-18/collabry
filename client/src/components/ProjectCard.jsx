@@ -41,6 +41,11 @@ function ProjectCard(props) {
                         ? `${open} of ${props.teamSize} spots open`
                         : "Team full"}
                 </span>
+                {props.ownerUsername && (
+                    <Link className="eyebrow" to={`/user/${props.ownerId}`}>
+                        @{props.ownerUsername}
+                    </Link>
+                )}
             </div>
 
             <div className="notice-actions">

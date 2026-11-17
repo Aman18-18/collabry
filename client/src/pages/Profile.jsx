@@ -8,6 +8,7 @@ import useNotifications from "../hooks/useNotifications";
 import useToast from "../hooks/useToast";
 import ConfirmButton from "../components/ConfirmButton";
 import ChangePassword from "../components/ChangePassword";
+import { normalizeUsername, validateUsername } from "../lib/username";
 
 function githubUrl(value) {
     if (!value) return "";
@@ -15,7 +16,7 @@ function githubUrl(value) {
 }
 
 function Profile() {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const { projects } = useProjects();
     const { refresh } = useNotifications();
     const toast = useToast();
@@ -79,6 +80,7 @@ function Profile() {
     function startEdit() {
         setForm({
             name: profile.name || "",
+            username: profile.username || "",
             college: profile.college || "",
             branch: profile.branch || "",
             year: profile.year ?? "",
@@ -97,12 +99,24 @@ function Profile() {
 
     async function handleSave(event) {
         event.preventDefault();
-        setSaving(true);
         setSaveError("");
 
+        const usernameIssue = validateUsername(form.username);
+
+        if (usernameIssue) {
+            setSaveError(usernameIssue);
+            return;
+        }
+
+        setSaving(true);
+
         try {
-            const response = await api.put("/users/me", form);
+            const response = await api.put("/users/me", {
+                ...form,
+                username: normalizeUsername(form.username)
+            });
             setProfile(response.data.user);
+            updateUser({ ...user, username: response.data.user.username });
             setMessage(response.data.message);
             setEditing(false);
         } catch (error) {
@@ -141,6 +155,25 @@ function Profile() {
                         <div className="field">
                             <label htmlFor="p-name">Name</label>
                             <input id="p-name" value={form.name} onChange={setField("name")} />
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="p-username">Username</label>
+                            <input
+                                id="p-username"
+                                required
+                                value={form.username || ""}
+                                onChange={setField("username")}
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                autoComplete="username"
+                                maxLength={21}
+                                placeholder="your_name"
+                            />
+                            <span className="field-hint">
+                                We’ll show it as @username. Use 3–20 letters, numbers, or underscores.
+                            </span>
                         </div>
 
                         <div className="field">
@@ -189,6 +222,11 @@ function Profile() {
                     <aside className="profile-card">
                         <div className="avatar" aria-hidden="true">{profile.name?.[0]}</div>
                         <h1>{profile.name}</h1>
+                        {profile.username ? (
+                            <div className="eyebrow">@{profile.username}</div>
+                        ) : (
+                            <div className="field-hint">Choose a username so teammates can recognize you.</div>
+                        )}
                         {details.length > 0 && (
                             <div className="eyebrow">{details.join(" · ")}</div>
                         )}

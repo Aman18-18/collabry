@@ -37,7 +37,7 @@ router.get('/', async(req,res) =>{
 
     try{
         const projects = await Project.find()
-                         .populate('owner','name');
+                         .populate('owner','name username');
 
         res.json(projects);                 
 
@@ -120,7 +120,7 @@ router.post('/' , authMiddleware , async(req,res)=>{
 router.get('/:id/members', async (req, res) => {
     try {
         const project = await Project.findById(req.params.id)
-            .populate('owner', 'name');
+            .populate('owner', 'name username');
 
         if (!project) {
             return res.status(404).json({
@@ -132,17 +132,22 @@ router.get('/:id/members', async (req, res) => {
             project : req.params.id,
             status : 'accepted'
         })
-            .populate('applicant', 'name')
+            .populate('applicant', 'name username')
             .sort({ createdAt : 1 });
 
         res.json({
-            owner : { _id : project.owner?._id, name : project.owner?.name },
+            owner : {
+                _id : project.owner?._id,
+                name : project.owner?.name,
+                username : project.owner?.username
+            },
             members : accepted
                 .filter(application => application.applicant)
                 .map(application => ({
                     _id : application._id,
                     userId : application.applicant._id,
-                    name : application.applicant.name
+                    name : application.applicant.name,
+                    username : application.applicant.username
                 }))
         });
     } catch (error) {

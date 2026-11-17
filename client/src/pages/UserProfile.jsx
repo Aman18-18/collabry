@@ -59,6 +59,7 @@ function UserProfile() {
                 <div>
                     <div className="eyebrow">Member</div>
                     <h1>{user.name}</h1>
+                    {user.username && <div className="eyebrow">@{user.username}</div>}
                 </div>
             </div>
 

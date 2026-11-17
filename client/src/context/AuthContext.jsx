@@ -28,15 +28,22 @@ function AuthProvider({ children }) {
         return user;
     }
 
-    async function register(name, email, password) {
+    async function register(name, username, email, password) {
 
         const response = await api.post("/auth/register", {
             name,
+            username,
             email,
             password
         });
 
         return response.data;
+    }
+
+    function updateUser(updates) {
+        const updatedUser = { ...(user || {}), ...updates };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
     }
 
     function logout() {
@@ -51,6 +58,7 @@ function AuthProvider({ children }) {
                 user,
                 login,
                 register,
+                updateUser,
                 logout
             }}
         >

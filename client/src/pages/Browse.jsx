@@ -181,6 +181,7 @@ function Browse() {
                                 status={project.status}
                                 projectType={project.projectType}
                                 ownerId={project.owner?._id}
+                                ownerUsername={project.owner?.username}
                                 highlight={project._id === highlightId}
                             />
                         ))}

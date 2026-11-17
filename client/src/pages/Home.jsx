@@ -119,6 +119,7 @@ function Home() {
                 status={project.status}
                 projectType={project.projectType}
                 ownerId={project.owner?._id}
+                ownerUsername={project.owner?.username}
               />
             ))}
           </div>

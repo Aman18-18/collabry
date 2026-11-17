@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
 const User = require("../models/user.js");
+const { normalizeUsername, validateUsername } = require("../lib/username.js");
 
 const router = express.Router();
 
@@ -43,6 +44,7 @@ router.post("/register", registerByIp, async (req, res) => {
     try {
         // strings only, trimmed; emails are always stored in lowercase
         const name = String(req.body.name ?? "").trim();
+        const username = normalizeUsername(req.body.username);
         const email = String(req.body.email ?? "").trim().toLowerCase();
         const password = String(req.body.password ?? "");
 
@@ -50,6 +52,12 @@ router.post("/register", registerByIp, async (req, res) => {
             return res.status(400).json({
                 message: "Name, email and password are required"
             });
+        }
+
+        const usernameError = validateUsername(username);
+
+        if (usernameError) {
+            return res.status(400).json({ message: usernameError });
         }
 
         if (!/^\S+@\S+\.\S+$/.test(email)) {
@@ -79,10 +87,19 @@ router.post("/register", registerByIp, async (req, res) => {
             });
         }
 
+        const existingUsername = await User.findOne({ username });
+
+        if (existingUsername) {
+            return res.status(409).json({
+                message: "That username is already taken"
+            });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
             name,
+            username,
             email,
             password: hashedPassword
         });
@@ -92,11 +109,18 @@ router.post("/register", registerByIp, async (req, res) => {
             user: {
                 id: user._id,
                 name: user.name,
+                username: user.username,
                 email: user.email
             }
         });
 
     } catch (error) {
+    if (error.code === 11000 && error.keyPattern?.username) {
+        return res.status(409).json({
+            message: "That username is already taken"
+        });
+    }
+
     console.error(error);
 
     res.status(500).json({
@@ -148,6 +172,7 @@ router.post("/login", loginByIp, loginByEmail, async (req, res) => {
             user: {
                 id: user._id,
                 name: user.name,
+                username: user.username || null,
                 email: user.email
             }
         });
