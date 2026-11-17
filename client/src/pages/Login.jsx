@@ -2,11 +2,15 @@ import React, { useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import useToast from "../hooks/useToast";
+import { CONTACT_EMAIL } from "../lib/siteInfo";
 
 function Login() {
     const { user, login } = useAuth();
     const location = useLocation();
     const toast = useToast();
+    const passwordResetEmail = CONTACT_EMAIL
+        ? `mailto:${CONTACT_EMAIL}?subject=Collabry%20password%20reset&body=Hello%2C%20I%20need%20help%20resetting%20my%20Collabry%20password.%0A%0AMy%20registered%20email%20address%20is%3A%20`
+        : "";
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -89,7 +93,11 @@ function Login() {
                 </p>
 
                 <p className="form-foot">
-                    Forgot your password? <Link to="/contact">Contact me</Link> and I'll reset it.
+                    Forgot your password? {passwordResetEmail ? (
+                        <a href={passwordResetEmail}>Email me</a>
+                    ) : (
+                        <Link to="/contact">Contact me</Link>
+                    )} and I'll reset it.
                 </p>
             </form>
         </main>

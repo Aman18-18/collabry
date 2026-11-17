@@ -1,6 +1,24 @@
-import { CONTACT_EMAIL, GITHUB_URL, LINKEDIN_URL, X_URL } from "../lib/siteInfo";
+import { useState } from "react";
+import { CONTACT_EMAIL, GITHUB_URL } from "../lib/siteInfo";
 
 function Contact() {
+    const [copyStatus, setCopyStatus] = useState("");
+
+    async function copyEmail() {
+        try {
+            if (!navigator.clipboard?.writeText) {
+                throw new Error("Clipboard access is unavailable");
+            }
+
+            await navigator.clipboard.writeText(CONTACT_EMAIL);
+            setCopyStatus("Email address copied.");
+        } catch {
+            setCopyStatus("Copy isn’t available here. Select the email address to copy it.");
+        }
+    }
+
+    const emailLink = `mailto:${CONTACT_EMAIL}?subject=Collabry%20message`;
+
     return (
         <main className="page prose">
             <div className="eyebrow">Get in touch</div>
@@ -13,18 +31,25 @@ function Contact() {
             </p>
 
             <h2>How to reach me</h2>
+            {CONTACT_EMAIL && (
+                <div className="contact-email">
+                    <p>
+                        Email: <a href={emailLink}>{CONTACT_EMAIL}</a>
+                    </p>
+                    <div className="form-actions">
+                        <a className="btn btn-primary" href={emailLink}>Write an email</a>
+                        <button className="btn" type="button" onClick={copyEmail}>
+                            Copy email
+                        </button>
+                    </div>
+                    {copyStatus && (
+                        <p className="field-hint" role="status" aria-live="polite">
+                            {copyStatus}
+                        </p>
+                    )}
+                </div>
+            )}
             <ul>
-                {CONTACT_EMAIL && (
-                    <li>
-                        Email: <a href={`mailto:${CONTACT_EMAIL}?subject=Collabry`}>{CONTACT_EMAIL}</a>
-                    </li>
-                )}
-                <li>
-                    LinkedIn: <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer">message me on LinkedIn</a>
-                </li>
-                <li>
-                    X: <a href={X_URL} target="_blank" rel="noopener noreferrer">@ykykaman</a>
-                </li>
                 <li>
                     GitHub: <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">open an issue or say hi</a>
                 </li>
