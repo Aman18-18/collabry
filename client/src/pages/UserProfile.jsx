@@ -65,7 +65,11 @@ function UserProfile() {
 
             <div className="profile-grid">
                 <aside className="profile-card">
-                    <div className="avatar" aria-hidden="true">{user.name?.[0]}</div>
+                    {user.profilePhoto ? (
+                        <img className="avatar avatar-photo" src={user.profilePhoto} alt={`${user.name}'s profile`} />
+                    ) : (
+                        <div className="avatar" aria-hidden="true">{user.name?.[0]}</div>
+                    )}
 
                     {details.length > 0 && (
                         <div className="eyebrow">{details.join(" · ")}</div>

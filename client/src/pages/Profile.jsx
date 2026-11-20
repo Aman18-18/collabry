@@ -31,6 +31,7 @@ function Profile() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
     const [saveError, setSaveError] = useState("");
+    const [photoError, setPhotoError] = useState("");
 
     useEffect(() => {
         async function load() {
@@ -86,15 +87,45 @@ function Profile() {
             year: profile.year ?? "",
             skills: (profile.skills || []).join(", "),
             bio: profile.bio || "",
-            github: profile.github || ""
+            github: profile.github || "",
+            profilePhoto: profile.profilePhoto || ""
         });
         setMessage("");
         setSaveError("");
+        setPhotoError("");
         setEditing(true);
     }
 
     function setField(key) {
         return (event) => setForm({ ...form, [key]: event.target.value });
+    }
+
+    function handlePhotoChange(event) {
+        const file = event.target.files?.[0];
+        setPhotoError("");
+
+        if (!file) return;
+
+        if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+            setPhotoError("Choose a JPG, PNG, WebP, or GIF image.");
+            event.target.value = "";
+            return;
+        }
+
+        if (file.size > 1024 * 1024) {
+            setPhotoError("Profile photos must be 1 MB or smaller.");
+            event.target.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === "string") {
+                setForm((current) => ({ ...current, profilePhoto: reader.result }));
+            }
+        };
+        reader.onerror = () => setPhotoError("Unable to read this image. Please try another file.");
+        reader.readAsDataURL(file);
     }
 
     async function handleSave(event) {
@@ -116,7 +147,10 @@ function Profile() {
                 username: normalizeUsername(form.username)
             });
             setProfile(response.data.user);
-            updateUser({ username: response.data.user.username });
+            updateUser({
+                username: response.data.user.username,
+                profilePhoto: response.data.user.profilePhoto
+            });
             setMessage(response.data.message);
             setEditing(false);
         } catch (error) {
@@ -152,6 +186,30 @@ function Profile() {
             <div className="profile-grid">
                 {editing ? (
                     <form className="form-card" onSubmit={handleSave}>
+                        <div className="field">
+                            <label htmlFor="p-photo">Profile photo (optional)</label>
+                            <input
+                                id="p-photo"
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                onChange={handlePhotoChange}
+                            />
+                            <span className="field-hint">JPG, PNG, WebP, or GIF. Maximum 1 MB.</span>
+                            {form.profilePhoto && (
+                                <div className="photo-preview">
+                                    <img className="avatar avatar-photo" src={form.profilePhoto} alt="Profile photo preview" />
+                                    <button
+                                        className="btn btn-ghost"
+                                        type="button"
+                                        onClick={() => setForm((current) => ({ ...current, profilePhoto: "" }))}
+                                    >
+                                        Remove photo
+                                    </button>
+                                </div>
+                            )}
+                            {photoError && <p className="notice-error" role="alert">{photoError}</p>}
+                        </div>
+
                         <div className="field">
                             <label htmlFor="p-name">Name</label>
                             <input id="p-name" value={form.name} onChange={setField("name")} />
@@ -220,7 +278,11 @@ function Profile() {
                     </form>
                 ) : (
                     <aside className="profile-card">
-                        <div className="avatar" aria-hidden="true">{profile.name?.[0]}</div>
+                        {profile.profilePhoto ? (
+                            <img className="avatar avatar-photo" src={profile.profilePhoto} alt={`${profile.name}'s profile`} />
+                        ) : (
+                            <div className="avatar" aria-hidden="true">{profile.name?.[0]}</div>
+                        )}
                         <h1>{profile.name}</h1>
                         {profile.username ? (
                             <div className="eyebrow">@{profile.username}</div>
