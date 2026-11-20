@@ -3,4 +3,4 @@ export const CONTACT_EMAIL = "amanssingh2718@gmail.com";   // leave empty ("") t
 export const GITHUB_URL = "https://github.com/Aman18-18";
 export const LINKEDIN_URL = "https://www.linkedin.com/in/amansingh1818";
 export const X_URL = "https://x.com/ykykaman";
-export const LAST_UPDATED = "30 October 2026";
+export const LAST_UPDATED = "20 November 2026";

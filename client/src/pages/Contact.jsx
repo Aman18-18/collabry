@@ -25,9 +25,9 @@ function Contact() {
             <h1>Contact us</h1>
 
             <p>
-                Collabry is a student-run project, so there's a real person reading
-                this. Reach out if something is broken, you have an idea, or you
-                want your account and data deleted. I usually reply within a few days.
+                Collabry is a student-run project. Reach out if something is broken,
+                you have an idea, need help with your profile or username, or want
+                to request account and data deletion. I usually reply within a few days.
             </p>
 
             <h2>How to reach me</h2>
@@ -65,17 +65,19 @@ function Contact() {
 
             <h2>Forgot your password?</h2>
             <p>
-                There's no automatic reset yet. Message me from a profile I know is
-                yours, and tell me the email address you registered with. Once I'm
-                sure it's you, I'll send you a temporary password. Log in with it
-                and change it right away from your Profile.
+                On the sign-in page, choose <strong>Forgot your password?</strong>,
+                enter your account email, and follow the six-digit code sent to you
+                to set a new password. If you can’t access that email or the reset
+                doesn’t work, contact me and include your username. Never send your
+                password or a verification code.
             </p>
 
             <h2>Deleting your account</h2>
             <p>
-                There's no delete button yet. Contact me from the email address you
-                registered with, and I'll remove your account, your profile details
-                and your applications.
+                There isn’t a self-service delete option yet. Contact me from the
+                email address on your account to request deletion. I’ll verify the
+                request and help remove your account, profile, projects and
+                associated applications.
             </p>
         </main>
     );
