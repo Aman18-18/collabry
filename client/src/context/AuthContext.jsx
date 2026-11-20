@@ -1,67 +1,81 @@
-import { createContext, useState } from "react";
-import api from "../lib/axios";
-
-export const AuthContext = createContext();
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth as useClerkAuth, useClerk, useUser } from "@clerk/react";
+import api, { setAuthTokenGetter } from "../lib/axios";
+import AuthContext from "./authContext";
 
 function AuthProvider({ children }) {
+    const { isLoaded: clerkLoaded, isSignedIn, getToken } = useClerkAuth();
+    const { signOut } = useClerk();
+    const { user: clerkUser, isLoaded: clerkUserLoaded } = useUser();
+    const [profileRecord, setProfileRecord] = useState(null);
 
-    const [user, setUser] = useState(() => {
-        const savedUser = localStorage.getItem("user");
+    setAuthTokenGetter(getToken);
 
-        return savedUser ? JSON.parse(savedUser) : null;
-    });
+    useEffect(() => {
+        if (!clerkLoaded || !clerkUserLoaded || !isSignedIn || !clerkUser?.id) {
+            return undefined;
+        }
 
-    async function login(email, password) {
+        let active = true;
 
-        const response = await api.post("/auth/login", {
-            email,
-            password
-        });
+        api.get("/users/me").then(
+            ({ data }) => {
+                if (!active) return;
 
-        const { user, token } = response.data;
+                setProfileRecord({
+                    clerkUserId: clerkUser.id,
+                    user: { ...data, id: data._id || data.id },
+                    error: ""
+                });
+            },
+            (error) => {
+                if (!active) return;
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
+                setProfileRecord({
+                    clerkUserId: clerkUser.id,
+                    user: null,
+                    error: error.response?.data?.message ||
+                        "Failed to load your Collabry profile"
+                });
+            }
+        );
 
-        setUser(user);
+        return () => {
+            active = false;
+        };
+    }, [clerkLoaded, clerkUserLoaded, isSignedIn, clerkUser?.id]);
 
-        return user;
-    }
+    const profileMatchesSession = Boolean(
+        isSignedIn && clerkUser?.id && profileRecord?.clerkUserId === clerkUser.id
+    );
+    const user = profileMatchesSession ? profileRecord.user : null;
+    const profileError = profileMatchesSession ? profileRecord.error : "";
 
-    async function register(name, username, email, password) {
+    const updateUser = useCallback((updates) => {
+        setProfileRecord((current) => current?.clerkUserId === clerkUser?.id
+            ? {
+                ...current,
+                user: current.user ? { ...current.user, ...updates } : current.user
+            }
+            : current
+        );
+    }, [clerkUser?.id]);
 
-        const response = await api.post("/auth/register", {
-            name,
-            username,
-            email,
-            password
-        });
+    const logout = useCallback(async () => {
+        await signOut();
+    }, [signOut]);
 
-        return response.data;
-    }
-
-    function updateUser(updates) {
-        const updatedUser = { ...(user || {}), ...updates };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-    }
-
-    function logout() {
-        setUser(null);
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-    }
+    const value = useMemo(() => ({
+        user,
+        isSignedIn: Boolean(isSignedIn),
+        isLoaded: clerkLoaded && clerkUserLoaded && (!isSignedIn || profileMatchesSession),
+        profileError,
+        updateUser,
+        logout
+    }), [user, isSignedIn, clerkLoaded, clerkUserLoaded, profileMatchesSession, profileError, updateUser, logout]);
 
     return (
-        <AuthContext.Provider
-            value={{
-                user,
-                login,
-                register,
-                updateUser,
-                logout
-            }}
-        >
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
