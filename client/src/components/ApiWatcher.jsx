@@ -7,24 +7,18 @@ const SLOW_AFTER_MS = 5000;
 
 // Two jobs, both watching every request the app makes:
 // 1. a request taking over 5 seconds shows a "waking the server up" notice
-// 2. a 401 on a logged-in request means the session expired: log out, say so
+// 2. a 401 on an authenticated request reports the rejected endpoint without clearing Clerk's session
 function ApiWatcher() {
-    const { user, logout } = useAuth();
+    const { isSignedIn } = useAuth();
     const { show } = useToast();
 
     const [slow, setSlow] = useState(false);
     const timers = useRef(new Map());
     const expiredShown = useRef(false);
-    const logoutRef = useRef(logout);
-    const loggedIn = Boolean(user);
 
     useEffect(() => {
-        logoutRef.current = logout;
-    });
-
-    useEffect(() => {
-        if (loggedIn) expiredShown.current = false;
-    }, [loggedIn]);
+        if (isSignedIn) expiredShown.current = false;
+    }, [isSignedIn]);
 
     useEffect(() => {
         const pending = timers.current;
@@ -60,10 +54,15 @@ function ApiWatcher() {
                     headers?.Authorization || headers?.get?.("Authorization")
                 );
 
-                if (error.response?.status === 401 && sentToken && !expiredShown.current) {
+                if (error.response?.status === 401 && sentToken && isSignedIn && !expiredShown.current) {
                     expiredShown.current = true;
-                    logoutRef.current();
-                    show("Your session expired. Please log in again.", "error");
+                    const method = error.config?.method?.toUpperCase() || "API";
+                    const endpoint = error.config?.url || "request";
+                    console.warn("Collabry API rejected a Clerk-authenticated request:", method, endpoint);
+                    show(
+                        `The API rejected your session on ${method} ${endpoint}. You are still signed in; refresh the page or contact support.`,
+                        "error"
+                    );
                 }
 
                 return Promise.reject(error);
@@ -76,7 +75,7 @@ function ApiWatcher() {
             pending.forEach((timer) => clearTimeout(timer));
             pending.clear();
         };
-    }, [show]);
+    }, [show, isSignedIn]);
 
     if (!slow) return null;
 

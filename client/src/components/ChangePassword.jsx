@@ -1,9 +1,17 @@
 import { useState } from "react";
-import api from "../lib/axios";
+import { useReverification, useUser } from "@clerk/react";
 import useToast from "../hooks/useToast";
 
 function ChangePassword() {
     const toast = useToast();
+    const { user } = useUser();
+    const updatePassword = useReverification((params) => {
+        if (!user) {
+            throw new Error("You must be signed in to change your password.");
+        }
+
+        return user.updatePassword(params);
+    });
 
     const [open, setOpen] = useState(false);
     const [currentPassword, setCurrentPassword] = useState("");
@@ -37,16 +45,17 @@ function ChangePassword() {
         setSaving(true);
 
         try {
-            const response = await api.put("/users/me/password", {
+            await updatePassword({
                 currentPassword,
-                newPassword
+                newPassword,
+                signOutOfOtherSessions: true
             });
 
-            toast.show(response.data.message);
+            toast.show("Password changed.");
             close();
         } catch (error) {
             setError(
-                error.response?.data?.message ||
+                error.message ||
                 "Failed to change password"
             );
         } finally {
