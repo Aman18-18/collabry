@@ -36,15 +36,8 @@ function ProjectDetails() {
             if (!silent) setLoading(true);
             setError("");
 
-            const response = await api.get("/projects");
-            const foundProject = response.data.find((item) => item._id === id);
-
-            if (!foundProject) {
-                setError("Project not found");
-                return;
-            }
-
-            setProject(foundProject);
+            const response = await api.get(`/projects/${id}`);
+            setProject(response.data);
         } catch (error) {
             setError(
                 error.response?.data?.message || "Failed to load project"

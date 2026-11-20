@@ -54,7 +54,7 @@ function RotatingWord() {
 function Home() {
   const { projects, loading } = useProjects();
 
-  // newest open notices first
+  // newest recruiting notices first
   const latest = newestFirst(
     projects.filter((project) => project.status === "open")
   ).slice(0, 3);

@@ -84,6 +84,8 @@ a:hover { color: var(--accent-text); }
 .notice-ok { font: 500 14px var(--mono); color: var(--moss); border: 1.5px solid var(--moss); padding: 10px 12px; background: #E7EEE4; }
 .form-foot { font-size: 14px; color: var(--muted); }
 .form-foot a { text-decoration: underline; }
+.text-button { padding: 0; border: 0; background: none; color: inherit; cursor: pointer; font: inherit; text-decoration: underline; }
+.text-button:disabled { cursor: not-allowed; opacity: .6; }
 
 /* notice cards (projects) */
 .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 44px 36px; align-items: start; }

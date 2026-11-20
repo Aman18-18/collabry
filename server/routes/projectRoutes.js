@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Project = require('../models/project.js');
 const Application = require('../models/Applications.js');
 const authMiddleware = require('../middleware/authMiddleware.js');
@@ -36,7 +37,12 @@ function cleanTeamLink(raw) {
 router.get('/', async(req,res) =>{
 
     try{
-        const projects = await Project.find()
+        const projects = await Project.find({
+            status: 'open',
+            $expr: {
+                $lt: [{ $ifNull: ['$currentSize', 1] }, '$teamSize']
+            }
+        })
                          .populate('owner','name username');
 
         res.json(projects);                 
@@ -47,6 +53,39 @@ router.get('/', async(req,res) =>{
         res.status(500).json({
             message : 'Server error'
         });
+    }
+});
+
+router.get('/mine', authMiddleware, async (req, res) => {
+    try {
+        const projects = await Project.find({ owner: req.user.userId })
+            .populate('owner', 'name username')
+            .sort({ createdAt: -1 });
+
+        res.json(projects);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.get('/:id', async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        const project = await Project.findById(req.params.id)
+            .populate('owner', 'name username');
+
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        res.json(project);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 

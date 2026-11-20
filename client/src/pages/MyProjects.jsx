@@ -19,13 +19,8 @@ function MyProjects() {
 
         async function fetchMyProjects() {
             try {
-                const response = await api.get("/projects");
-
-                const myProjects = response.data.filter(
-                    project => project.owner._id === user.id
-                );
-
-                setProjects(myProjects);
+                const response = await api.get("/projects/mine");
+                setProjects(response.data);
 
             } catch (error) {
                 setError(

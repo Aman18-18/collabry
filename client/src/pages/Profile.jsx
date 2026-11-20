@@ -116,7 +116,7 @@ function Profile() {
                 username: normalizeUsername(form.username)
             });
             setProfile(response.data.user);
-            updateUser({ ...user, username: response.data.user.username });
+            updateUser({ username: response.data.user.username });
             setMessage(response.data.message);
             setEditing(false);
         } catch (error) {

@@ -19,13 +19,7 @@ function EditProject() {
     useEffect(() => {
         async function fetchProject() {
             try {
-                const response = await api.get("/projects");
-                const found = response.data.find((item) => item._id === id);
-
-                if (!found) {
-                    setError("Project not found");
-                    return;
-                }
+                const response = await api.get(`/projects/${id}`);
 
                 // the link is not in the public list, only the owner can fetch it
                 try {
@@ -35,7 +29,7 @@ function EditProject() {
                     setTeamLink("");
                 }
 
-                setProject(found);
+                setProject(response.data);
             } catch (error) {
                 setError(
                     error.response?.data?.message || "Failed to load project"
