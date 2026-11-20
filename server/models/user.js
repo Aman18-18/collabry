@@ -23,9 +23,15 @@ const userSchema = new mongoose.Schema({
         trim: true
     },
 
+    clerkUserId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+
     password: {
         type: String,
-        required: true
+        select: false
     },
 
     college: {

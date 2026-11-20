@@ -20,4 +20,31 @@ function validateUsername(username) {
     return null;
 }
 
-module.exports = { normalizeUsername, validateUsername };
+function usernameBase(value) {
+    const base = normalizeUsername(value)
+        .replace(/[^a-z0-9_]/g, "")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+    return (base.length >= 3 ? base : `user${base}`).slice(0, 20);
+}
+
+function* usernameCandidates(value) {
+    const base = usernameBase(value);
+
+    for (let suffix = 1; suffix <= 1000; suffix++) {
+        const suffixText = suffix === 1 ? "" : `_${suffix}`;
+        const username = `${base.slice(0, 20 - suffixText.length)}${suffixText}`;
+
+        if (!validateUsername(username)) {
+            yield username;
+        }
+    }
+}
+
+module.exports = {
+    normalizeUsername,
+    validateUsername,
+    usernameBase,
+    usernameCandidates
+};
