@@ -26,6 +26,128 @@ function openSpots(project) {
     return Math.max(0, Number(project.teamSize || 0) - Number(project.currentSize ?? 1));
 }
 
+const EXAMPLE_PROJECTS = [
+    {
+        id: "example-campus-food-finder",
+        category: "STUDENT APP",
+        title: "Campus Food Finder",
+        description: "Find affordable, student-reviewed food spots around campus.",
+        techStack: ["React", "Firebase"],
+        skillsNeeded: ["UI/UX", "Full stack"],
+        teamSize: 4,
+        currentSize: 2,
+        ownerName: "Maya Chen",
+        ownerUsername: "maya.builds"
+    },
+    {
+        id: "example-study-group-matcher",
+        category: "STARTUP",
+        title: "Study Group Matcher",
+        description: "Help classmates find study groups for their courses.",
+        techStack: ["Node.js", "MongoDB"],
+        skillsNeeded: ["Backend", "Product design"],
+        teamSize: 3,
+        currentSize: 1,
+        ownerName: "Lucas Ortiz",
+        ownerUsername: "lucas.codes"
+    },
+    {
+        id: "example-green-campus-map",
+        category: "HACKATHON",
+        title: "Green Campus Map",
+        description: "Map refill stations, recycling points, and greener routes.",
+        techStack: ["React Native", "Maps API"],
+        skillsNeeded: ["Mobile development", "UI/UX"],
+        teamSize: 5,
+        currentSize: 2,
+        ownerName: "Nina Park",
+        ownerUsername: "nina.designs"
+    },
+    {
+        id: "example-campus-event-hub",
+        category: "STUDENT APP",
+        title: "Campus Event Hub",
+        description: "Bring club events, workshops, and campus meetups into one place.",
+        techStack: ["Next.js", "PostgreSQL"],
+        skillsNeeded: ["Frontend", "Backend"],
+        teamSize: 5,
+        currentSize: 2,
+        ownerName: "Aarav Shah",
+        ownerUsername: "aarav.codes"
+    },
+    {
+        id: "example-peer-tutoring-exchange",
+        category: "COMMUNITY",
+        title: "Peer Tutoring Exchange",
+        description: "Match students who want to learn with classmates ready to teach.",
+        techStack: ["Django", "SQLite"],
+        skillsNeeded: ["Python", "UX research"],
+        teamSize: 4,
+        currentSize: 1,
+        ownerName: "Priya Nair",
+        ownerUsername: "priya.builds"
+    },
+    {
+        id: "example-club-inventory-tracker",
+        category: "MINOR PROJECT",
+        title: "Club Inventory Tracker",
+        description: "Help student clubs track equipment, lending, and returns.",
+        techStack: ["Vue", "Supabase"],
+        skillsNeeded: ["Product design", "Frontend"],
+        teamSize: 4,
+        currentSize: 2,
+        ownerName: "Ishan Verma",
+        ownerUsername: "ishan.dev"
+    }
+];
+
+function ExampleProjectCard({ project }) {
+    function renderTagGroup(label, tags) {
+        return (
+            <div className="notice-tag-group">
+                <span className="notice-tag-label">{label}</span>
+                <div className="tags">
+                    {tags.slice(0, 2).map((tag, index) => (
+                        <span className="tag" key={`${tag}-${index}`}>{tag}</span>
+                    ))}
+                    {tags.length > 2 && (
+                        <span className="tag notice-tag-more">+{tags.length - 2}</span>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <article className="notice notice-pinned notice-compact example-project-card">
+            <span className="notice-pin" aria-hidden="true" />
+            <div className="eyebrow notice-category">{project.category} · OPEN</div>
+            <h2>{project.title}</h2>
+            <p className="notice-desc">{project.description}</p>
+
+            <div className="notice-tag-groups">
+                {renderTagGroup("Tech", project.techStack)}
+                {renderTagGroup("Looking for", project.skillsNeeded)}
+            </div>
+
+            <div className="notice-meta">
+                <span className="notice-spots">
+                    {project.teamSize - project.currentSize} of {project.teamSize} spots open
+                </span>
+                <span className="notice-owner">
+                    <span className="notice-owner-avatar" aria-hidden="true">
+                        {project.ownerName[0]}
+                    </span>
+                    <span className="notice-owner-copy">
+                        <strong>{project.ownerName}</strong>
+                        <span>@{project.ownerUsername}</span>
+                    </span>
+                </span>
+            </div>
+        </article>
+    );
+}
+
 function reducer(state, action) {
     switch (action.type) {
         case "SET_PAGE":
@@ -119,7 +241,7 @@ function Browse() {
         matchSkills,
         hideApplied
     } = state;
-    const { isSignedIn, user } = useAuth();
+    const { isSignedIn, isLoaded: authLoaded, user } = useAuth();
 
     const location = useLocation();
     const [searchParams] = useSearchParams();
@@ -306,12 +428,15 @@ function Browse() {
         Number(moreSpotsOnly) +
         Number(matchSkills) +
         Number(hideApplied);
+    const showExamples = authLoaded && !isSignedIn && !search && activeFilterCount === 0 &&
+        filteredProjects.length === 0;
     const showPeople = usernameQuery.length >= 2;
     const peopleSearchMatches = peopleSearch.query === usernameQuery;
     const people = peopleSearchMatches ? peopleSearch.results : [];
     const peopleLoading = showPeople && isSignedIn &&
         (!peopleSearchMatches || peopleSearch.loading);
     const peopleError = peopleSearchMatches ? peopleSearch.error : "";
+    const showMemberCount = showPeople && isSignedIn && !peopleLoading && !peopleError;
     const activeFilterChips = [
         ...roles.map((role) => ({
             label: ROLES.find((option) => option.value === role)?.label || role,
@@ -355,15 +480,57 @@ function Browse() {
     return (
         <div className={`browse-layout${filtersOpen ? " browse-layout-filters-open" : ""}`}>
             {filtersOpen && (
-                <aside className="filters" id="browse-filters" aria-label="Sort and filters">
-                    <div className="filters-heading">
-                        <h2>Sort &amp; filter</h2>
+                <button
+                    className="filters-backdrop"
+                    type="button"
+                    aria-label="Close filters"
+                    onClick={() => setFiltersOpen(false)}
+                />
+            )}
+            <aside
+                className={`filters ${filtersOpen ? "filters-open" : "filters-collapsed"}`}
+                id="browse-filters"
+                aria-label="Sort and filters"
+                onKeyDown={(event) => {
+                    if (event.key === "Escape") setFiltersOpen(false);
+                }}
+            >
+                <div className="filters-heading">
+                    {filtersOpen && <h2>Sort &amp; filter</h2>}
+                    <button
+                        className="filters-toggle"
+                        type="button"
+                        aria-label={filtersOpen ? "Close sort and filters" : "Open sort and filters"}
+                        aria-expanded={filtersOpen}
+                        aria-controls="browse-filters"
+                        title="Sort & filter"
+                        onClick={() => setFiltersOpen((open) => !open)}
+                    >
+                        {filtersOpen ? (
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="m6 6 12 12M18 6 6 18" />
+                            </svg>
+                        ) : (
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 7h9m4 0h3M4 17h3m4 0h9" />
+                                <circle cx="15" cy="7" r="2" />
+                                <circle cx="9" cy="17" r="2" />
+                            </svg>
+                        )}
+                        {!filtersOpen && <span>Filters</span>}
+                        {!filtersOpen && activeFilterCount > 0 && (
+                            <span className="filter-count">{activeFilterCount}</span>
+                        )}
+                    </button>
+                </div>
+
+                {filtersOpen && (
+                    <>
                         {activeFilterCount > 0 && (
-                            <button className="text-button" type="button" onClick={clearFilters}>
+                            <button className="text-button filters-clear" type="button" onClick={clearFilters}>
                                 Clear all
                             </button>
                         )}
-                    </div>
 
                     <details className="filter-section">
                         <summary>Sort by</summary>
@@ -500,37 +667,28 @@ function Browse() {
                             )}
                         </div>
                     </details>
-                </aside>
-            )}
+                    </>
+                )}
+            </aside>
 
             <main className="browse-main">
                 <div className="page-head browse-head">
                     <div>
-                        <div className="eyebrow">
-                            {filteredProjects.length} {filteredProjects.length === 1 ? "project" : "projects"}
-                            {showPeople && isSignedIn && !peopleLoading && !peopleError && (
-                                <> · {people.length} {people.length === 1 ? "member" : "members"}</>
-                            )}
-                        </div>
+                        {(filteredProjects.length > 0 || showMemberCount) && (
+                            <div className="eyebrow">
+                                {filteredProjects.length > 0 && (
+                                    <>
+                                        {filteredProjects.length} {filteredProjects.length === 1 ? "project" : "projects"}
+                                        {showMemberCount && " · "}
+                                    </>
+                                )}
+                                {showMemberCount && (
+                                    <>{people.length} {people.length === 1 ? "member" : "members"}</>
+                                )}
+                            </div>
+                        )}
                         <h1>The board</h1>
                     </div>
-                    <button
-                        className="btn browse-filter-toggle"
-                        type="button"
-                        aria-expanded={filtersOpen}
-                        aria-controls="browse-filters"
-                        onClick={() => setFiltersOpen((open) => !open)}
-                    >
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M4 7h9m4 0h3M4 17h3m4 0h9" />
-                            <circle cx="15" cy="7" r="2" />
-                            <circle cx="9" cy="17" r="2" />
-                        </svg>
-                        {filtersOpen ? "Hide filters" : "Sort & filter"}
-                        {activeFilterCount > 0 && (
-                            <span className="filter-count">{activeFilterCount}</span>
-                        )}
-                    </button>
                 </div>
 
                 {activeFilterChips.length > 0 && (
@@ -582,11 +740,9 @@ function Browse() {
                 {hideApplied && appliedFilterLoading ? (
                     <p className="status-msg" role="status">Checking your applications...</p>
                 ) : currentProjects.length === 0 ? (
-                    <p className="status-msg">
-                        {activeFilterCount > 0 || search
-                            ? "Nothing matches those filters."
-                            : "No projects found."}
-                    </p>
+                    (activeFilterCount > 0 || search) && (
+                        <p className="status-msg">Nothing matches those filters.</p>
+                    )
                 ) : (
                     <div className="board">
                         {currentProjects.map((project) => (
@@ -601,11 +757,27 @@ function Browse() {
                                 status={project.status}
                                 projectType={project.projectType}
                                 ownerId={project.owner?._id}
+                                ownerName={project.owner?.name}
                                 ownerUsername={project.owner?.username}
+                                skillsNeeded={project.skillsNeeded}
+                                compact
                                 highlight={project._id === highlightId}
                             />
                         ))}
                     </div>
+                )}
+
+                {showExamples && (
+                    <section className="example-projects" aria-labelledby="example-projects-heading">
+                        <div className="example-projects-heading">
+                            <h2 id="example-projects-heading">Example projects</h2>
+                        </div>
+                        <div className="board">
+                            {EXAMPLE_PROJECTS.map((project) => (
+                                <ExampleProjectCard key={project.id} project={project} />
+                            ))}
+                        </div>
+                    </section>
                 )}
 
                 <div className="pager">

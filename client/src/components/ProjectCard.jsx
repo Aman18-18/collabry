@@ -16,12 +16,14 @@ function ProjectCard(props) {
 
     const open = props.teamSize - props.currentTeamSize;
     const isOwner = user && props.ownerId === user.id;
+    const techTags = toTags(props.techStack);
+    const skillTags = toTags(props.skillsNeeded);
 
     return (
-        <article className={`notice notice-pinned${props.highlight ? " notice-new" : ""}`}>
+        <article className={`notice notice-pinned${props.compact ? " notice-compact" : ""}${props.highlight ? " notice-new" : ""}`}>
             <span className="notice-pin" aria-hidden="true" />
 
-            <div className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>
+            <div className="eyebrow notice-category">
                 {[TYPE_LABELS[props.projectType], props.status].filter(Boolean).join(" · ")}
             </div>
 
@@ -31,11 +33,44 @@ function ProjectCard(props) {
 
             <p className="notice-desc">{props.description}</p>
 
-            <div className="tags">
-                {toTags(props.techStack).map((tag) => (
-                    <span className="tag" key={tag}>{tag}</span>
-                ))}
-            </div>
+            {props.compact && (techTags.length > 0 || skillTags.length > 0) && (
+                <div className="notice-tag-groups">
+                    {techTags.length > 0 && (
+                        <div className="notice-tag-group">
+                            <span className="notice-tag-label">Tech</span>
+                            <div className="tags">
+                                {techTags.slice(0, 2).map((tag, index) => (
+                                    <span className="tag" key={`${tag}-${index}`}>{tag}</span>
+                                ))}
+                                {techTags.length > 2 && (
+                                    <span className="tag notice-tag-more">+{techTags.length - 2}</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    {skillTags.length > 0 && (
+                        <div className="notice-tag-group">
+                            <span className="notice-tag-label">Looking for</span>
+                            <div className="tags">
+                                {skillTags.slice(0, 2).map((tag, index) => (
+                                    <span className="tag" key={`${tag}-${index}`}>{tag}</span>
+                                ))}
+                                {skillTags.length > 2 && (
+                                    <span className="tag notice-tag-more">+{skillTags.length - 2}</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {!props.compact && techTags.length > 0 && (
+                <div className="tags">
+                    {techTags.map((tag, index) => (
+                        <span className="tag" key={`${tag}-${index}`}>{tag}</span>
+                    ))}
+                </div>
+            )}
 
             <div className="notice-meta">
                 <span className="notice-spots">
@@ -43,7 +78,17 @@ function ProjectCard(props) {
                         ? `${open} of ${props.teamSize} spots open`
                         : "Team full"}
                 </span>
-                {props.ownerUsername && (
+                {props.compact && props.ownerId ? (
+                    <Link className="notice-owner" to={`/user/${props.ownerId}`}>
+                        <span className="notice-owner-avatar" aria-hidden="true">
+                            {(props.ownerName || props.ownerUsername || "?").charAt(0).toUpperCase()}
+                        </span>
+                        <span className="notice-owner-copy">
+                            {props.ownerName && <strong>{props.ownerName}</strong>}
+                            {props.ownerUsername && <span>@{props.ownerUsername}</span>}
+                        </span>
+                    </Link>
+                ) : props.ownerUsername && (
                     <Link className="eyebrow" to={`/user/${props.ownerId}`}>
                         @{props.ownerUsername}
                     </Link>
