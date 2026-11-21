@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useReverification, useUser } from "@clerk/react";
 import useToast from "../hooks/useToast";
+import PasswordInput from "./PasswordInput";
 
 function ChangePassword() {
     const toast = useToast();
@@ -77,9 +78,8 @@ function ChangePassword() {
         <form className="form-card" onSubmit={handleSubmit} style={{ maxWidth: 440 }}>
             <div className="field">
                 <label htmlFor="current-password">Current password</label>
-                <input
+                <PasswordInput
                     id="current-password"
-                    type="password"
                     autoComplete="current-password"
                     value={currentPassword}
                     onChange={(event) => setCurrentPassword(event.target.value)}
@@ -88,9 +88,8 @@ function ChangePassword() {
 
             <div className="field">
                 <label htmlFor="new-password">New password</label>
-                <input
+                <PasswordInput
                     id="new-password"
-                    type="password"
                     autoComplete="new-password"
                     value={newPassword}
                     onChange={(event) => setNewPassword(event.target.value)}
@@ -100,9 +99,8 @@ function ChangePassword() {
 
             <div className="field">
                 <label htmlFor="confirm-new-password">Confirm new password</label>
-                <input
+                <PasswordInput
                     id="confirm-new-password"
-                    type="password"
                     autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}

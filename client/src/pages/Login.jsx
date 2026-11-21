@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth as useClerkAuth, useSignIn } from "@clerk/react";
 import useToast from "../hooks/useToast";
 import { clerkNavigation, safeInternalDestination } from "../lib/clerkNavigation";
+import PasswordInput from "../components/PasswordInput";
 
 function Login() {
     const { isLoaded, isSignedIn } = useClerkAuth();
@@ -260,9 +261,8 @@ function Login() {
                 {stage === "credentials" && (
                     <div className="field">
                         <label htmlFor="password">Password</label>
-                        <input
+                        <PasswordInput
                             id="password"
-                            type="password"
                             autoComplete="current-password"
                             placeholder="Enter your password"
                             value={password}
@@ -295,9 +295,8 @@ function Login() {
                 {stage === "new-password" && (
                     <div className="field">
                         <label htmlFor="password">New password</label>
-                        <input
+                        <PasswordInput
                             id="password"
-                            type="password"
                             autoComplete="new-password"
                             placeholder="At least 8 characters"
                             value={password}

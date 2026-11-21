@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth as useClerkAuth, useSignUp } from "@clerk/react";
 import useToast from "../hooks/useToast";
 import { clerkNavigation } from "../lib/clerkNavigation";
+import PasswordInput from "../components/PasswordInput";
 
 function Register() {
     const { isLoaded, isSignedIn } = useClerkAuth();
@@ -178,9 +179,8 @@ function Register() {
 
                         <div className="field">
                             <label htmlFor="password">Password</label>
-                            <input
+                            <PasswordInput
                                 id="password"
-                                type="password"
                                 autoComplete="new-password"
                                 placeholder="Enter your password"
                                 value={password}
@@ -192,9 +192,8 @@ function Register() {
 
                         <div className="field">
                             <label htmlFor="confirm">Confirm password</label>
-                            <input
+                            <PasswordInput
                                 id="confirm"
-                                type="password"
                                 autoComplete="new-password"
                                 placeholder="Confirm your password"
                                 value={confirmPassword}
